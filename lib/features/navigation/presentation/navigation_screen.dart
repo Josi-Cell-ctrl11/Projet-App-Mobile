@@ -1,270 +1,249 @@
-// Écran de navigation GPS vers le client
+// Ecran navigation GPS — carte mockee en attendant cle API Google Maps
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
-import '../../../core/utils/formatters.dart';
-import '../../../shared/models/commande.dart';
-import '../../../shared/widgets/ozel_button.dart';
 import '../../commandes/domain/commandes_provider.dart';
 
-/// Écran de navigation GPS avec carte Google Maps
-class NavigationScreen extends ConsumerStatefulWidget {
+/// Ecran de navigation GPS avec carte mockee.
+class NavigationScreen extends ConsumerWidget {
   final String commandeId;
   const NavigationScreen({super.key, required this.commandeId});
 
   @override
-  ConsumerState<NavigationScreen> createState() => _NavigationScreenState();
-}
-
-class _NavigationScreenState extends ConsumerState<NavigationScreen> {
-  GoogleMapController? _mapController;
-
-  // Position mockée du livreur (Cotonou centre)
-  static const LatLng _positionLivreur = LatLng(6.3654, 2.4183);
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final commande = ref.watch(activeCommandeProvider);
 
     if (commande == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Navigation')),
+        appBar: AppBar(
+          title: const Text('Navigation'),
+          backgroundColor: AppColors.kPrimaryOrange,
+          foregroundColor: AppColors.kWhite,
+        ),
         body: const Center(child: Text('Commande introuvable')),
       );
     }
 
-    final markers = _buildMarkers(commande);
-    // _getDestination utilisé dans _InfoPanel via commande.statut directement
-
     return Scaffold(
-      body: Stack(
-        children: [
-          // Carte Google Maps
-          GoogleMap(
-            initialCameraPosition: CameraPosition(
-              target: _positionLivreur,
-              zoom: 14,
-            ),
-            onMapCreated: (controller) {
-              _mapController = controller;
-              // Centrer sur la position du livreur
-              _mapController?.animateCamera(
-                CameraUpdate.newLatLngBounds(
-                  _getBounds(commande),
-                  80,
-                ),
-              );
+      appBar: AppBar(
+        title: const Text('Navigation GPS'),
+        backgroundColor: AppColors.kPrimaryOrange,
+        foregroundColor: AppColors.kWhite,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.phone),
+            tooltip: AppStrings.appelerClient,
+            onPressed: () async {
+              final uri = Uri.parse('tel:${commande.clientTelephone}');
+              if (await canLaunchUrl(uri)) await launchUrl(uri);
             },
-            markers: markers,
-            myLocationEnabled: true,
-            myLocationButtonEnabled: false,
-            zoomControlsEnabled: false,
-            mapToolbarEnabled: false,
           ),
-              // Bouton retour
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 8,
-            left: 12,
-            child: CircleAvatar(
-              backgroundColor: AppColors.kWhite,
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.kTextPrimary),
-                onPressed: () => Navigator.pop(context),
+        ],
+      ),
+      body: Column(
+        children: [
+          // ── Carte mockee ─────────────────────────────────────────────────
+          Expanded(
+            child: Container(
+              color: const Color(0xFFE8F0FE),
+              child: Stack(
+                children: [
+                  // Grille de rues mockee
+                  CustomPaint(
+                    painter: _GridPainter(),
+                    child: const SizedBox.expand(),
+                  ),
+                  // Icone livreur au centre
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppColors.kPrimaryOrange,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.kPrimaryOrange
+                                    .withValues(alpha: 0.4),
+                                blurRadius: 20,
+                                spreadRadius: 4,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.delivery_dining_rounded,
+                            color: AppColors.kWhite,
+                            size: 36,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.kWhite,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
+                          child: const Text(
+                            'Vous etes ici',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                              color: AppColors.kPrimaryOrange,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Marqueur pickup
+                  Positioned(
+                    top: 60,
+                    left: 40,
+                    child: _MapMarker(
+                      label: 'Pickup',
+                      color: AppColors.kPrimaryOrange,
+                      icon: Icons.store_rounded,
+                    ),
+                  ),
+                  // Marqueur livraison
+                  Positioned(
+                    bottom: 80,
+                    right: 40,
+                    child: _MapMarker(
+                      label: 'Livraison',
+                      color: Colors.red,
+                      icon: Icons.location_on_rounded,
+                    ),
+                  ),
+                  // Badge GPS
+                  Positioned(
+                    top: 16,
+                    right: 16,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.kWhite,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 8,
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                              color: AppColors.kGreen,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const Text(
+                            'GPS actif',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.kGreen,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Note carte mock
+                  Positioned(
+                    bottom: 16,
+                    left: 16,
+                    right: 16,
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.65),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Text(
+                        'Carte GPS disponible apres configuration de la cle Google Maps',
+                        style: TextStyle(color: Colors.white70, fontSize: 11),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          // Panneau d'infos en bas
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: _InfoPanel(
-              commande: commande,
-              onAppelerClient: () => _appelerClient(commande.clientTelephone),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  LatLng _getDestination(Commande commande) {
-    // Naviguer vers pickup si pas encore au pickup, sinon vers livraison
-    if (commande.statut == StatutCommande.acceptee) {
-      return LatLng(
-        commande.adressePickup.latitude,
-        commande.adressePickup.longitude,
-      );
-    }
-    return LatLng(
-      commande.adresseLivraison.latitude,
-      commande.adresseLivraison.longitude,
-    );
-  }
-
-  Set<Marker> _buildMarkers(Commande commande) {
-    return {
-      // Position du livreur
-      Marker(
-        markerId: const MarkerId('livreur'),
-        position: _positionLivreur,
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
-        infoWindow: const InfoWindow(title: 'Votre position'),
-      ),
-      // Point de pickup
-      Marker(
-        markerId: const MarkerId('pickup'),
-        position: LatLng(
-          commande.adressePickup.latitude,
-          commande.adressePickup.longitude,
-        ),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-        infoWindow: InfoWindow(
-          title: 'Pickup',
-          snippet: commande.adressePickup.libelle,
-        ),
-      ),
-      // Point de livraison
-      Marker(
-        markerId: const MarkerId('livraison'),
-        position: LatLng(
-          commande.adresseLivraison.latitude,
-          commande.adresseLivraison.longitude,
-        ),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-        infoWindow: InfoWindow(
-          title: 'Livraison',
-          snippet: commande.adresseLivraison.libelle,
-        ),
-      ),
-    };
-  }
-
-  LatLngBounds _getBounds(Commande commande) {
-    final points = [
-      _positionLivreur,
-      LatLng(commande.adressePickup.latitude, commande.adressePickup.longitude),
-      LatLng(commande.adresseLivraison.latitude, commande.adresseLivraison.longitude),
-    ];
-
-    double minLat = points.map((p) => p.latitude).reduce((a, b) => a < b ? a : b);
-    double maxLat = points.map((p) => p.latitude).reduce((a, b) => a > b ? a : b);
-    double minLng = points.map((p) => p.longitude).reduce((a, b) => a < b ? a : b);
-    double maxLng = points.map((p) => p.longitude).reduce((a, b) => a > b ? a : b);
-
-    return LatLngBounds(
-      southwest: LatLng(minLat - 0.005, minLng - 0.005),
-      northeast: LatLng(maxLat + 0.005, maxLng + 0.005),
-    );
-  }
-
-  Future<void> _appelerClient(String telephone) async {
-    final uri = Uri.parse('tel:$telephone');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    }
-  }
-}
-
-/// Panneau d'informations en bas de la carte
-class _InfoPanel extends StatelessWidget {
-  final Commande commande;
-  final VoidCallback onAppelerClient;
-
-  const _InfoPanel({
-    required this.commande,
-    required this.onAppelerClient,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
-        color: AppColors.kWhite,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x1A000000),
-            blurRadius: 20,
-            offset: Offset(0, -4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Indicateur de glissement
+          // ── Infos trajet ──────────────────────────────────────────────────
           Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.kGreyLight,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Destination actuelle
-          Row(
-            children: [
-              const Icon(Icons.navigation, color: AppColors.kPrimaryOrange),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            color: AppColors.kWhite,
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Text(
-                      commande.statut == StatutCommande.acceptee
-                          ? 'Direction : Pickup'
-                          : 'Direction : Livraison',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.kTextSecondary,
+                    const Icon(Icons.store_rounded,
+                        color: AppColors.kPrimaryOrange, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        commande.adressePickup.libelle,
+                        style: const TextStyle(fontSize: 13),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    Text(
-                      commande.statut == StatutCommande.acceptee
-                          ? commande.adressePickup.libelle
-                          : commande.adresseLivraison.libelle,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // Distance et temps
-          Row(
-            children: [
-              _InfoChip(
-                icone: Icons.route,
-                valeur: Formatters.formatDistance(commande.distanceKm),
-              ),
-              const SizedBox(width: 8),
-              _InfoChip(
-                icone: Icons.access_time,
-                valeur: Formatters.formatDuree(commande.tempsEstimeMinutes),
-              ),
-              const Spacer(),
-              // Bouton appel client
-              OzelButton(
-                label: AppStrings.appelerClient,
-                onPressed: onAppelerClient,
-                variant: OzelButtonVariant.secondary,
-                icon: Icons.phone,
-                width: 160,
-                height: 40,
-              ),
-            ],
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    const Icon(Icons.location_on_rounded,
+                        color: Colors.red, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        commande.adresseLivraison.libelle,
+                        style: const TextStyle(fontSize: 13),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    const Icon(Icons.route_rounded,
+                        color: AppColors.kTextSecondary, size: 14),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${commande.distanceKm.toStringAsFixed(1)} km  •  '
+                      '${commande.tempsEstimeMinutes} min',
+                      style: const TextStyle(
+                        color: AppColors.kTextSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -272,35 +251,77 @@ class _InfoPanel extends StatelessWidget {
   }
 }
 
-class _InfoChip extends StatelessWidget {
-  final IconData icone;
-  final String valeur;
-
-  const _InfoChip({required this.icone, required this.valeur});
+class _MapMarker extends StatelessWidget {
+  const _MapMarker({
+    required this.label,
+    required this.color,
+    required this.icon,
+  });
+  final String label;
+  final Color color;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.kGreyLight,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icone, size: 14, color: AppColors.kTextSecondary),
-          const SizedBox(width: 4),
-          Text(
-            valeur,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.kTextPrimary,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.4),
+                blurRadius: 8,
+              ),
+            ],
+          ),
+          child: Icon(icon, color: Colors.white, size: 18),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 4,
+              ),
+            ],
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: color,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
+}
+
+class _GridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFFD0E4FF)
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+    for (double x = 0; x < size.width; x += 40) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+    for (double y = 0; y < size.height; y += 40) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
