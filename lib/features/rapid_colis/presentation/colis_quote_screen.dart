@@ -15,9 +15,10 @@ class ColisQuoteScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final draft = ref.watch(colisDraftProvider);
+    // Poids inconnu avant pesee livreur — estimation avec 1 kg par defaut
     final price = RapidColisPricing.quote(
       distanceKm: draft.distanceKm,
-      weightKg: draft.weightKg,
+      weightKg: 1,
     );
 
     return Scaffold(
@@ -74,13 +75,13 @@ class ColisQuoteScreen extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppColors.success.withValues(alpha: 0.1),
+                      color: AppColors.warning.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Text(
-                      "✓ Prix garanti à la confirmation",
+                      "Prix final apres pesee par le livreur",
                       style: TextStyle(
-                        color: AppColors.success,
+                        color: AppColors.warning,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -126,7 +127,7 @@ class ColisQuoteScreen extends ConsumerWidget {
                     icon: Icons.scale_rounded,
                     iconColor: AppColors.textSecondary,
                     label: "Poids",
-                    value: "${draft.weightKg.toStringAsFixed(1)} kg",
+                    value: "Mesure par le livreur",
                   ),
                   const _Divider(),
                   _DetailRow(

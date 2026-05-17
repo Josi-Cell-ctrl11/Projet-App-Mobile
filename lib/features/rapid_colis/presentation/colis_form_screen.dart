@@ -1,16 +1,21 @@
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:go_router/go_router.dart";
 import "package:image_picker/image_picker.dart";
 
 import "../../../core/theme/app_colors.dart";
-import "../../../core/utils/rapid_colis_pricing.dart";
 import "../../../core/utils/formatters.dart";
+import "../../../core/utils/rapid_colis_pricing.dart";
 import "../../../shared/widgets/ozel_button.dart";
 import "../../../shared/widgets/ozel_text_field.dart";
 import "../application/colis_draft_notifier.dart";
 
-/// Formulaire Rapid Colis — UI moderne avec prix en temps réel.
+/// Formulaire Rapid Colis — logique rapport client Mai 2026 :
+/// - Pas de saisie de poids (sera pese par le livreur sur place)
+/// - Champ "Qui paie ?" : Expediteur ou Destinataire
+/// - Mode Coursier universel
+/// - Message paiement avant remise
 class ColisFormScreen extends ConsumerStatefulWidget {
   const ColisFormScreen({super.key});
 
@@ -19,16 +24,24 @@ class ColisFormScreen extends ConsumerStatefulWidget {
 }
 
 class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
-  final _a = TextEditingController(text: "Ganhi — marché Dantokpa");
+  final _a = TextEditingController(text: "Ganhi — marche Dantokpa");
   final _b = TextEditingController(text: "Akpakpa — en face de la pharmacie");
+  final _nomDest = TextEditingController();
+  final _telDest = TextEditingController();
+  final _descCoursier = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final d = ref.read(colisDraftProvider);
-      _a.text = d.pointA.isNotEmpty ? d.pointA : _a.text;
-      _b.text = d.pointB.isNotEmpty ? d.pointB : _b.text;
+      if (d.pointA.isNotEmpty) _a.text = d.pointA;
+      if (d.pointB.isNotEmpty) _b.text = d.pointB;
+      if (d.nomDestinataire.isNotEmpty) _nomDest.text = d.nomDestinataire;
+      if (d.telephoneDestinataire.isNotEmpty)
+        _telDest.text = d.telephoneDestinataire;
+      if (d.descriptionCoursier.isNotEmpty)
+        _descCoursier.text = d.descriptionCoursier;
     });
   }
 
@@ -36,6 +49,9 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
   void dispose() {
     _a.dispose();
     _b.dispose();
+    _nomDest.dispose();
+    _telDest.dispose();
+    _descCoursier.dispose();
     super.dispose();
   }
 
@@ -51,6 +67,10 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
     final notifier = ref.read(colisDraftProvider.notifier);
     notifier.setPointA(_a.text.trim());
     notifier.setPointB(_b.text.trim());
+    notifier.setNomDestinataire(_nomDest.text.trim());
+    notifier.setTelephoneDestinataire(_telDest.text.trim());
+    notifier.setDescriptionCoursier(_descCoursier.text.trim());
+
     if (_a.text.trim().isEmpty || _b.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -58,8 +78,7 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
           backgroundColor: AppColors.black,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+              borderRadius: BorderRadius.circular(12)),
         ),
       );
       return;
@@ -70,9 +89,10 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
   @override
   Widget build(BuildContext context) {
     final draft = ref.watch(colisDraftProvider);
-    final price = RapidColisPricing.quote(
+    // Prix estimatif base sur la distance uniquement (poids inconnu)
+    final priceEstim = RapidColisPricing.quote(
       distanceKm: draft.distanceKm,
-      weightKg: draft.weightKg,
+      weightKg: 1, // poids par defaut pour estimation
     );
 
     return Scaffold(
@@ -84,49 +104,64 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
         title: const Text(
           "Rapid Colis",
           style: TextStyle(
-            fontWeight: FontWeight.w800,
-            color: AppColors.black,
-          ),
+              fontWeight: FontWeight.w800, color: AppColors.black),
         ),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         children: [
-          // ── Header bleu ────────────────────────────────────────────────────
+          // ── Choix du mode ──────────────────────────────────────────────────
+          _ModeSelector(
+            selected: draft.mode,
+            onChanged: (m) =>
+                ref.read(colisDraftProvider.notifier).setMode(m),
+          ),
+
+          const SizedBox(height: 16),
+
+          // ── Header ────────────────────────────────────────────────────────
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF1565C0), Color(0xFF0D47A1)],
+              gradient: LinearGradient(
+                colors: draft.mode == ModeColis.colis
+                    ? [const Color(0xFF1565C0), const Color(0xFF0D47A1)]
+                    : [AppColors.primary, AppColors.primaryDark],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(18),
             ),
-            child: const Row(
+            child: Row(
               children: [
                 Icon(
-                  Icons.local_shipping_rounded,
+                  draft.mode == ModeColis.colis
+                      ? Icons.inventory_2_rounded
+                      : Icons.directions_bike_rounded,
                   color: AppColors.white,
                   size: 36,
                 ),
-                SizedBox(width: 14),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Envoi de colis",
-                        style: TextStyle(
+                        draft.mode == ModeColis.colis
+                            ? "Envoi de colis"
+                            : "Coursier universel",
+                        style: const TextStyle(
                           color: AppColors.white,
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
-                        "Livraison rapide à Cotonou & environs",
-                        style: TextStyle(
+                        draft.mode == ModeColis.colis
+                            ? "Le livreur pesera le colis sur place"
+                            : "Le livreur va chercher l'article pour vous",
+                        style: const TextStyle(
                           color: Colors.white70,
                           fontSize: 12,
                         ),
@@ -140,9 +175,10 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
 
           const SizedBox(height: 16),
 
-          // ── Prix en temps réel ─────────────────────────────────────────────
+          // ── Prix estimatif ─────────────────────────────────────────────────
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               color: AppColors.white,
               borderRadius: BorderRadius.circular(16),
@@ -158,19 +194,26 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        "Prix estimé",
+                        "Prix estimatif",
                         style: TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 12,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Text(
-                        Formatters.fcfa(price),
+                        "a partir de ${Formatters.fcfa(priceEstim)}",
                         style: const TextStyle(
-                          fontSize: 28,
+                          fontSize: 22,
                           fontWeight: FontWeight.w900,
                           color: AppColors.primary,
+                        ),
+                      ),
+                      const Text(
+                        "Prix final apres pesee par le livreur",
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -183,7 +226,7 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
-                    Icons.calculate_rounded,
+                    Icons.scale_rounded,
                     color: AppColors.primary,
                     size: 24,
                   ),
@@ -194,7 +237,57 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
 
           const SizedBox(height: 16),
 
-          // ── Aperçu trajet (sans CustomPaint) ──────────────────────────────
+          // ── Message paiement avant remise ──────────────────────────────────
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFB71C1C).withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: const Color(0xFFB71C1C).withValues(alpha: 0.25)),
+            ),
+            child: const Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.lock_rounded,
+                    color: Color(0xFFB71C1C), size: 16),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    "Le paiement doit etre effectue avant la remise du colis.",
+                    style: TextStyle(
+                      color: Color(0xFFB71C1C),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // ── Adresses ───────────────────────────────────────────────────────
+          const _SectionLabel(
+              icon: Icons.place_outlined, label: "Adresses"),
+          const SizedBox(height: 10),
+          OzelTextField(
+            controller: _a,
+            label: "Point A — Ramassage / Depart",
+            prefixIcon: Icons.flag_rounded,
+          ),
+          const SizedBox(height: 12),
+          OzelTextField(
+            controller: _b,
+            label: "Point B — Livraison / Destination",
+            prefixIcon: Icons.place_rounded,
+          ),
+
+          const SizedBox(height: 16),
+
+          // ── Apercu trajet ──────────────────────────────────────────────────
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
@@ -207,14 +300,11 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(
-                      Icons.map_rounded,
-                      size: 16,
-                      color: Color(0xFF1565C0),
-                    ),
+                    const Icon(Icons.route_rounded,
+                        size: 16, color: Color(0xFF1565C0)),
                     const SizedBox(width: 6),
                     const Text(
-                      "Aperçu du trajet",
+                      "Distance estimee",
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 12,
@@ -224,9 +314,7 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppColors.white,
                         borderRadius: BorderRadius.circular(20),
@@ -242,28 +330,38 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
+                Slider(
+                  value: draft.distanceKm.clamp(0.5, 25),
+                  min: 0.5,
+                  max: 25,
+                  divisions: 49,
+                  activeColor: const Color(0xFF1565C0),
+                  inactiveColor:
+                      const Color(0xFF1565C0).withValues(alpha: 0.15),
+                  label: "${draft.distanceKm.toStringAsFixed(1)} km",
+                  onChanged: (v) =>
+                      ref.read(colisDraftProvider.notifier).setDistance(v),
+                ),
+                const SizedBox(height: 4),
                 _MapPin(
                   label: "A",
                   color: AppColors.success,
                   text: draft.pointA.isNotEmpty
                       ? draft.pointA
-                      : "Point de départ",
+                      : "Point de depart",
                 ),
                 Padding(
                   padding: const EdgeInsets.only(left: 10),
                   child: Container(
-                    width: 2,
-                    height: 16,
-                    color: AppColors.disabled,
-                  ),
+                      width: 2, height: 14, color: AppColors.disabled),
                 ),
                 _MapPin(
                   label: "B",
-                  color: AppColors.primary,
+                  color: const Color(0xFF1565C0),
                   text: draft.pointB.isNotEmpty
                       ? draft.pointB
-                      : "Point d'arrivée",
+                      : "Point d'arrivee",
                 ),
               ],
             ),
@@ -271,155 +369,135 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
 
           const SizedBox(height: 20),
 
-          // ── Adresses ───────────────────────────────────────────────────────
+          // ── Destinataire ───────────────────────────────────────────────────
           const _SectionLabel(
-            icon: Icons.place_outlined,
-            label: "Adresses",
-          ),
+              icon: Icons.person_outline_rounded,
+              label: "Destinataire"),
           const SizedBox(height: 10),
           OzelTextField(
-            controller: _a,
-            label: "Point A — Ramassage",
-            prefixIcon: Icons.flag_rounded,
+            controller: _nomDest,
+            label: "Nom du destinataire",
+            prefixIcon: Icons.person_rounded,
           ),
           const SizedBox(height: 12),
           OzelTextField(
-            controller: _b,
-            label: "Point B — Livraison",
-            prefixIcon: Icons.place_rounded,
+            controller: _telDest,
+            label: "Telephone du destinataire",
+            prefixIcon: Icons.phone_rounded,
+            keyboardType: TextInputType.phone,
           ),
 
           const SizedBox(height: 20),
 
-          // ── Détails colis ──────────────────────────────────────────────────
+          // ── Qui paie ? ─────────────────────────────────────────────────────
           const _SectionLabel(
-            icon: Icons.tune_rounded,
-            label: "Détails du colis",
+              icon: Icons.payments_rounded, label: "Qui paie la livraison ?"),
+          const SizedBox(height: 10),
+          _PayeurSelector(
+            selected: draft.payeur,
+            onChanged: (p) =>
+                ref.read(colisDraftProvider.notifier).setPayeur(p),
           ),
-          const SizedBox(height: 12),
 
-          _SliderCard(
-            icon: Icons.scale_rounded,
-            label: "Poids",
-            value: "${draft.weightKg.toStringAsFixed(1)} kg",
-            child: Slider(
-              value: draft.weightKg.clamp(0.5, 30),
-              min: 0.5,
-              max: 30,
-              divisions: 59,
-              activeColor: AppColors.primary,
-              inactiveColor: AppColors.primary.withValues(alpha: 0.15),
-              label: "${draft.weightKg.toStringAsFixed(1)} kg",
-              onChanged: (v) =>
-                  ref.read(colisDraftProvider.notifier).setWeight(v),
+          const SizedBox(height: 20),
+
+          // ── Description (mode coursier) ────────────────────────────────────
+          if (draft.mode == ModeColis.coursier) ...[
+            const _SectionLabel(
+                icon: Icons.description_rounded,
+                label: "Description de la course"),
+            const SizedBox(height: 10),
+            OzelTextField(
+              controller: _descCoursier,
+              label: "Ex: Aller chercher un repas chez Chez Adja, Ganhi",
+              maxLines: 3,
+              prefixIcon: Icons.edit_note_rounded,
             ),
-          ),
-
-          const SizedBox(height: 12),
-
-          _SliderCard(
-            icon: Icons.route_rounded,
-            label: "Distance estimée",
-            value: "${draft.distanceKm.toStringAsFixed(1)} km",
-            child: Slider(
-              value: draft.distanceKm.clamp(0.5, 25),
-              min: 0.5,
-              max: 25,
-              divisions: 49,
-              activeColor: const Color(0xFF1565C0),
-              inactiveColor:
-                  const Color(0xFF1565C0).withValues(alpha: 0.15),
-              label: "${draft.distanceKm.toStringAsFixed(1)} km",
-              onChanged: (v) =>
-                  ref.read(colisDraftProvider.notifier).setDistance(v),
-            ),
-          ),
-
-          const SizedBox(height: 16),
+            const SizedBox(height: 20),
+          ],
 
           // ── Photo ──────────────────────────────────────────────────────────
-          GestureDetector(
-            onTap: _pickPhoto,
-            child: Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: draft.photoPath != null
-                      ? AppColors.success
-                      : AppColors.disabled,
-                  width: 1.5,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    draft.photoPath != null
-                        ? Icons.check_circle_rounded
-                        : Icons.photo_camera_outlined,
+          if (draft.mode == ModeColis.colis) ...[
+            GestureDetector(
+              onTap: _pickPhoto,
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
                     color: draft.photoPath != null
                         ? AppColors.success
-                        : AppColors.textSecondary,
-                    size: 22,
+                        : AppColors.disabled,
+                    width: 1.5,
                   ),
-                  const SizedBox(width: 12),
-                  Text(
-                    draft.photoPath == null
-                        ? "Ajouter une photo du colis (optionnel)"
-                        : "Photo sélectionnée ✓",
-                    style: TextStyle(
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      draft.photoPath != null
+                          ? Icons.check_circle_rounded
+                          : Icons.photo_camera_outlined,
                       color: draft.photoPath != null
                           ? AppColors.success
                           : AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 13,
+                      size: 22,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      draft.photoPath == null
+                          ? "Photo du colis (optionnel)"
+                          : "Photo selectionnee",
+                      style: TextStyle(
+                        color: draft.photoPath != null
+                            ? AppColors.success
+                            : AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+
+          // ── Info pesee ─────────────────────────────────────────────────────
+          if (draft.mode == ModeColis.colis)
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.success.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: AppColors.success.withValues(alpha: 0.25)),
+              ),
+              child: const Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.scale_rounded,
+                      color: AppColors.success, size: 16),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      "Le livreur pesera votre colis a l'arrivee avec son pese-colis. "
+                      "Vous validerez le poids sur l'application avant le calcul du tarif final.",
+                      style: TextStyle(
+                        color: AppColors.success,
+                        fontSize: 12,
+                        height: 1.4,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // ── Info tarification ──────────────────────────────────────────────
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.06),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.2),
-              ),
-            ),
-            child: const Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.info_outline_rounded,
-                  color: AppColors.primary,
-                  size: 18,
-                ),
-                SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    "1 000 FCFA jusqu'à 3 km · +150 FCFA/km · +500 FCFA/kg au-delà de 5 kg",
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 12,
-                      height: 1.4,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
 
           const SizedBox(height: 24),
 
           OzelPrimaryButton(
-            label: "Calculer le prix",
+            label: "Voir le devis",
             onPressed: _next,
           ),
         ],
@@ -428,8 +506,235 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
   }
 }
 
-// ─── Widgets helpers ──────────────────────────────────────────────────────────
+// ─── Mode Selector ────────────────────────────────────────────────────────────
+class _ModeSelector extends StatelessWidget {
+  const _ModeSelector({required this.selected, required this.onChanged});
+  final ModeColis selected;
+  final ValueChanged<ModeColis> onChanged;
 
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _ModeChip(
+            icon: Icons.inventory_2_rounded,
+            label: "Colis",
+            subtitle: "Envoi standard",
+            selected: selected == ModeColis.colis,
+            color: const Color(0xFF1565C0),
+            onTap: () => onChanged(ModeColis.colis),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _ModeChip(
+            icon: Icons.directions_bike_rounded,
+            label: "Coursier",
+            subtitle: "Course universelle",
+            selected: selected == ModeColis.coursier,
+            color: AppColors.primary,
+            onTap: () => onChanged(ModeColis.coursier),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ModeChip extends StatelessWidget {
+  const _ModeChip({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.selected,
+    required this.color,
+    required this.onTap,
+  });
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final bool selected;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: selected ? color.withValues(alpha: 0.08) : AppColors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: selected ? color : AppColors.disabled,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: selected ? color : AppColors.textSecondary,
+                size: 22),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: selected ? color : AppColors.black,
+                fontSize: 13,
+              ),
+            ),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                fontSize: 10,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Payeur Selector ──────────────────────────────────────────────────────────
+class _PayeurSelector extends StatelessWidget {
+  const _PayeurSelector({required this.selected, required this.onChanged});
+  final PayeurColis selected;
+  final ValueChanged<PayeurColis> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _PayeurOption(
+          icon: Icons.person_rounded,
+          label: "Moi (expediteur)",
+          subtitle: "Je paie maintenant avant la collecte",
+          selected: selected == PayeurColis.expediteur,
+          onTap: () => onChanged(PayeurColis.expediteur),
+        ),
+        const SizedBox(height: 8),
+        _PayeurOption(
+          icon: Icons.person_pin_rounded,
+          label: "Le destinataire",
+          subtitle: "Il paie a la reception — le livreur attend la confirmation",
+          selected: selected == PayeurColis.destinataire,
+          onTap: () => onChanged(PayeurColis.destinataire),
+        ),
+        if (selected == PayeurColis.destinataire) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.warning.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                  color: AppColors.warning.withValues(alpha: 0.3)),
+            ),
+            child: const Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.warning_amber_rounded,
+                    color: AppColors.warning, size: 14),
+                SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    "Le livreur ne remettra le colis qu'apres confirmation "
+                    "du paiement par le destinataire. En cas de non-paiement, "
+                    "le colis sera depose au commissariat.",
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.warning,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _PayeurOption extends StatelessWidget {
+  const _PayeurOption({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.selected,
+    required this.onTap,
+  });
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.primary.withValues(alpha: 0.06)
+              : AppColors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: selected ? AppColors.primary : AppColors.disabled,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: selected ? AppColors.primary : AppColors.textSecondary,
+              size: 22,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: selected ? AppColors.primary : AppColors.black,
+                      fontSize: 13,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (selected)
+              const Icon(Icons.check_circle_rounded,
+                  color: AppColors.primary, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Widgets helpers ──────────────────────────────────────────────────────────
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel({required this.icon, required this.label});
   final IconData icon;
@@ -454,70 +759,9 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-class _SliderCard extends StatelessWidget {
-  const _SliderCard({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.child,
-  });
-  final IconData icon;
-  final String label;
-  final String value;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 4),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 18, color: AppColors.textSecondary),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 13,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                  color: AppColors.black,
-                ),
-              ),
-            ],
-          ),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
 class _MapPin extends StatelessWidget {
-  const _MapPin({
-    required this.label,
-    required this.color,
-    required this.text,
-  });
+  const _MapPin(
+      {required this.label, required this.color, required this.text});
   final String label;
   final Color color;
   final String text;

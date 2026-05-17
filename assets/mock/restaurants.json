@@ -2,41 +2,84 @@
   "restaurants": [
     {
       "id": "r1",
-      "name": "Chez Adja — Cuisine béninoise",
+      "name": "Chez Adja",
       "category": "local",
+      "specialite": "Poulet braise",
       "rating": 4.7,
       "deliveryMinutes": 35,
+      "isOpen": true,
       "imageUrl": "https://picsum.photos/seed/ozel1/400/240",
       "menu": [
         {
           "id": "m1",
-          "name": "Poulet braisé + alloco",
+          "name": "Poulet braise + alloco",
           "description": "Demi-poulet, alloco, piment au choix",
           "priceFcfa": 3500,
+          "isMenuDuJour": true,
           "imageUrl": "https://picsum.photos/seed/plat1/300/200"
         },
         {
           "id": "m2",
-          "name": "Garba (thon + attiéké)",
-          "description": "Portion généreuse, oignons frais",
+          "name": "Garba (thon + attieke)",
+          "description": "Portion genereuse, oignons frais",
           "priceFcfa": 1500,
+          "isMenuDuJour": true,
           "imageUrl": "https://picsum.photos/seed/plat2/300/200"
         },
         {
           "id": "m3",
           "name": "Riz gras viande",
-          "description": "Riz parfumé, légumes de saison",
+          "description": "Riz parfume, legumes de saison",
           "priceFcfa": 2500,
+          "isMenuDuJour": true,
           "imageUrl": "https://picsum.photos/seed/plat3/300/200"
         }
       ]
     },
     {
       "id": "r2",
+      "name": "Maquis du Port",
+      "category": "local",
+      "specialite": "Moyo de porc",
+      "rating": 4.5,
+      "deliveryMinutes": 30,
+      "isOpen": true,
+      "imageUrl": "https://picsum.photos/seed/ozel5/400/240",
+      "menu": [
+        {
+          "id": "m8",
+          "name": "Moyo de porc",
+          "description": "Porc grille sauce moyo, piment, oignons",
+          "priceFcfa": 3000,
+          "isMenuDuJour": true,
+          "imageUrl": "https://picsum.photos/seed/moyo1/300/200"
+        },
+        {
+          "id": "m9",
+          "name": "Porc + igname pile",
+          "description": "Porc braise, igname pile, sauce tomate",
+          "priceFcfa": 3500,
+          "isMenuDuJour": true,
+          "imageUrl": "https://picsum.photos/seed/moyo2/300/200"
+        },
+        {
+          "id": "m10",
+          "name": "Abats de porc",
+          "description": "Foie, rognons, sauce pimentee",
+          "priceFcfa": 2500,
+          "isMenuDuJour": true,
+          "imageUrl": "https://picsum.photos/seed/moyo3/300/200"
+        }
+      ]
+    },
+    {
+      "id": "r3",
       "name": "Pizza Cotonou",
       "category": "pizza",
+      "specialite": "Pizza artisanale",
       "rating": 4.4,
       "deliveryMinutes": 40,
+      "isOpen": true,
       "imageUrl": "https://picsum.photos/seed/ozel2/400/240",
       "menu": [
         {
@@ -44,6 +87,7 @@
           "name": "Margherita",
           "description": "Tomate, mozzarella, basilic",
           "priceFcfa": 4000,
+          "isMenuDuJour": true,
           "imageUrl": "https://picsum.photos/seed/pizza1/300/200"
         },
         {
@@ -51,31 +95,80 @@
           "name": "4 saisons",
           "description": "Jambon, champignons, poivrons, olives",
           "priceFcfa": 5500,
+          "isMenuDuJour": true,
           "imageUrl": "https://picsum.photos/seed/pizza2/300/200"
+        },
+        {
+          "id": "m11",
+          "name": "Pizza poulet-yassa",
+          "description": "Poulet yassa, oignons caramelises, citron",
+          "priceFcfa": 5000,
+          "isMenuDuJour": true,
+          "imageUrl": "https://picsum.photos/seed/pizza3/300/200"
         }
       ]
     },
     {
-      "id": "r3",
+      "id": "r4",
       "name": "Healthy Bowl Ganhi",
       "category": "healthy",
+      "specialite": "Bowls sains",
       "rating": 4.9,
       "deliveryMinutes": 25,
+      "isOpen": true,
       "imageUrl": "https://picsum.photos/seed/ozel3/400/240",
       "menu": [
         {
           "id": "m6",
           "name": "Bowl quinoa avocat",
-          "description": "Quinoa, avocat, poulet grillé, sauce yaourt",
+          "description": "Quinoa, avocat, poulet grille, sauce yaourt",
           "priceFcfa": 4500,
+          "isMenuDuJour": true,
           "imageUrl": "https://picsum.photos/seed/bowl1/300/200"
         },
         {
           "id": "m7",
-          "name": "Salade César",
-          "description": "Poulet, parmesan, croûtons",
+          "name": "Salade Cesar",
+          "description": "Poulet, parmesan, croutons",
           "priceFcfa": 3000,
+          "isMenuDuJour": true,
           "imageUrl": "https://picsum.photos/seed/bowl2/300/200"
+        },
+        {
+          "id": "m12",
+          "name": "Wrap legumes grilles",
+          "description": "Tortilla, legumes, houmous, feta",
+          "priceFcfa": 3500,
+          "isMenuDuJour": true,
+          "imageUrl": "https://picsum.photos/seed/bowl3/300/200"
+        }
+      ]
+    },
+    {
+      "id": "r5",
+      "name": "Grill Akpakpa",
+      "category": "grill",
+      "specialite": "Poisson braise",
+      "rating": 4.6,
+      "deliveryMinutes": 45,
+      "isOpen": false,
+      "imageUrl": "https://picsum.photos/seed/ozel4/400/240",
+      "menu": [
+        {
+          "id": "m13",
+          "name": "Poisson braise entier",
+          "description": "Tilapia grille, sauce tomate, alloco",
+          "priceFcfa": 4000,
+          "isMenuDuJour": true,
+          "imageUrl": "https://picsum.photos/seed/fish1/300/200"
+        },
+        {
+          "id": "m14",
+          "name": "Crevettes grillees",
+          "description": "Crevettes, beurre ail, citron",
+          "priceFcfa": 5500,
+          "isMenuDuJour": true,
+          "imageUrl": "https://picsum.photos/seed/fish2/300/200"
         }
       ]
     }
