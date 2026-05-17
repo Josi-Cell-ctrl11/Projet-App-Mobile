@@ -1,0 +1,83 @@
+{
+  "restaurants": [
+    {
+      "id": "r1",
+      "name": "Chez Adja — Cuisine béninoise",
+      "category": "local",
+      "rating": 4.7,
+      "deliveryMinutes": 35,
+      "imageUrl": "https://picsum.photos/seed/ozel1/400/240",
+      "menu": [
+        {
+          "id": "m1",
+          "name": "Poulet braisé + alloco",
+          "description": "Demi-poulet, alloco, piment au choix",
+          "priceFcfa": 3500,
+          "imageUrl": "https://picsum.photos/seed/plat1/300/200"
+        },
+        {
+          "id": "m2",
+          "name": "Garba (thon + attiéké)",
+          "description": "Portion généreuse, oignons frais",
+          "priceFcfa": 1500,
+          "imageUrl": "https://picsum.photos/seed/plat2/300/200"
+        },
+        {
+          "id": "m3",
+          "name": "Riz gras viande",
+          "description": "Riz parfumé, légumes de saison",
+          "priceFcfa": 2500,
+          "imageUrl": "https://picsum.photos/seed/plat3/300/200"
+        }
+      ]
+    },
+    {
+      "id": "r2",
+      "name": "Pizza Cotonou",
+      "category": "pizza",
+      "rating": 4.4,
+      "deliveryMinutes": 40,
+      "imageUrl": "https://picsum.photos/seed/ozel2/400/240",
+      "menu": [
+        {
+          "id": "m4",
+          "name": "Margherita",
+          "description": "Tomate, mozzarella, basilic",
+          "priceFcfa": 4000,
+          "imageUrl": "https://picsum.photos/seed/pizza1/300/200"
+        },
+        {
+          "id": "m5",
+          "name": "4 saisons",
+          "description": "Jambon, champignons, poivrons, olives",
+          "priceFcfa": 5500,
+          "imageUrl": "https://picsum.photos/seed/pizza2/300/200"
+        }
+      ]
+    },
+    {
+      "id": "r3",
+      "name": "Healthy Bowl Ganhi",
+      "category": "healthy",
+      "rating": 4.9,
+      "deliveryMinutes": 25,
+      "imageUrl": "https://picsum.photos/seed/ozel3/400/240",
+      "menu": [
+        {
+          "id": "m6",
+          "name": "Bowl quinoa avocat",
+          "description": "Quinoa, avocat, poulet grillé, sauce yaourt",
+          "priceFcfa": 4500,
+          "imageUrl": "https://picsum.photos/seed/bowl1/300/200"
+        },
+        {
+          "id": "m7",
+          "name": "Salade César",
+          "description": "Poulet, parmesan, croûtons",
+          "priceFcfa": 3000,
+          "imageUrl": "https://picsum.photos/seed/bowl2/300/200"
+        }
+      ]
+    }
+  ]
+}
