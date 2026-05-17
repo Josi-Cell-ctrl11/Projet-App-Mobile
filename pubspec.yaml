@@ -23,7 +23,7 @@ dependencies:
   dio: ^5.8.0+1
 
   # Cartes & médias
-  google_maps_flutter: ^2.10.0
+  # google_maps_flutter: ^2.10.0  # Desactive temporairement — cartes mockees en attendant cle API
   image_picker: ^1.1.2
 
   # Firebase (FCM) — remplacer google-services.json par ton projet Firebase
