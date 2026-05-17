@@ -1,4 +1,4 @@
-import "../features/rapid_colis/application/colis_draft_notifier.dart";
+import "package:ozelservices/features/rapid_colis/application/colis_draft_notifier.dart";
 
 /// Expedition Rapid Colis (formulaire + suivi).
 class ColisShipment {
