@@ -8,16 +8,47 @@ import "../features/auth/presentation/otp_screen.dart";
 import "../features/auth/presentation/register_screen.dart";
 import "../features/auth/presentation/splash_screen.dart";
 import "../features/home/presentation/home_dashboard_screen.dart";
-import "../features/ozel_event/presentation/ozel_event_screen.dart";
-import "../features/ozel_hotesses/presentation/ozel_hotesses_screen.dart";
-import "../features/ozel_securites/presentation/ozel_securites_screen.dart";
-import "../features/ozel_tic/presentation/ozel_tic_screen.dart";
-import "../features/ozel_tours/presentation/ozel_tours_screen.dart";
+
+// ── Ozel Event ────────────────────────────────────────────────────────────────
+import "../features/ozel_event/presentation/ozel_event_home_screen.dart";
+import "../features/ozel_event/presentation/ozel_event_devis_screen.dart";
+import "../features/ozel_event/presentation/ozel_event_paiement_screen.dart";
+import "../features/ozel_event/presentation/ozel_event_confirmation_screen.dart";
+import "../features/ozel_event/presentation/ozel_event_reservations_screen.dart";
+
+// ── Ozel Hotesses ─────────────────────────────────────────────────────────────
+import "../features/ozel_hotesses/presentation/ozel_hotesses_home_screen.dart";
+import "../features/ozel_hotesses/presentation/ozel_hotesses_reservation_screen.dart";
+import "../features/ozel_hotesses/presentation/ozel_hotesses_mes_reservations_screen.dart";
+
+// ── Ozel Tours ────────────────────────────────────────────────────────────────
+import "../features/ozel_tours/presentation/ozel_tours_home_screen.dart";
+import "../features/ozel_tours/presentation/ozel_tours_circuit_detail_screen.dart";
+import "../features/ozel_tours/presentation/ozel_tours_reservation_screen.dart";
+import "../features/ozel_tours/presentation/ozel_tours_ebillet_screen.dart";
+
+// ── Ozel Securites ────────────────────────────────────────────────────────────
+import "../features/ozel_securites/presentation/ozel_securites_home_screen.dart";
+import "../features/ozel_securites/presentation/ozel_securites_jardinage_screen.dart";
+import "../features/ozel_securites/presentation/ozel_securites_vigile_screen.dart";
+import "../features/ozel_securites/presentation/ozel_securites_urgence_screen.dart";
+import "../features/ozel_securites/presentation/ozel_securites_mes_contrats_screen.dart";
+
+// ── OzelTic ───────────────────────────────────────────────────────────────────
+import "../features/ozel_tic/presentation/ozel_tic_home_screen.dart";
+import "../features/ozel_tic/presentation/ozel_tic_depannage_screen.dart";
+import "../features/ozel_tic/presentation/ozel_tic_devis_screen.dart";
+import "../features/ozel_tic/presentation/ozel_tic_domaine_screen.dart";
+import "../features/ozel_tic/presentation/ozel_tic_mes_tickets_screen.dart";
+
+// ── OzelFoods ─────────────────────────────────────────────────────────────────
 import "../features/ozelfoods/presentation/cart_screen.dart";
 import "../features/ozelfoods/presentation/checkout_screen.dart";
 import "../features/ozelfoods/presentation/order_tracking_screen.dart";
 import "../features/ozelfoods/presentation/restaurant_list_screen.dart";
 import "../features/ozelfoods/presentation/restaurant_menu_screen.dart";
+
+// ── Autres ────────────────────────────────────────────────────────────────────
 import "../features/profile/presentation/profile_screen.dart";
 import "../features/rapid_colis/presentation/colis_confirm_screen.dart";
 import "../features/rapid_colis/presentation/colis_form_screen.dart";
@@ -26,10 +57,13 @@ import "../features/rapid_colis/presentation/colis_tracking_screen.dart";
 import "../features/shell/main_shell_screen.dart";
 import "../features/wallet/presentation/recharge_momo_screen.dart";
 import "../features/wallet/presentation/wallet_screen.dart";
+import "../shared/models/circuit_model.dart";
+import "../shared/models/hotesse_model.dart";
+import "../shared/models/tour_reservation.dart";
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: "root");
 
-/// Configuration GoRouter (shell a 5 onglets + flux auth + 5 nouveaux services).
+/// Configuration GoRouter — 7 services complets + flux auth.
 final goRouterProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
     navigatorKey: _rootNavigatorKey,
@@ -37,320 +71,212 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: "/",
-        name: "root",
-        redirect: (context, state) => "/splash",
+        redirect: (_, __) => "/splash",
       ),
       GoRoute(
         path: "/splash",
-        name: "splash",
-        builder: (context, state) => const SplashScreen(),
+        builder: (_, __) => const SplashScreen(),
       ),
       GoRoute(
         path: "/onboarding",
-        name: "onboarding",
-        builder: (context, state) => const OnboardingScreen(),
+        builder: (_, __) => const OnboardingScreen(),
       ),
       GoRoute(
         path: "/login",
-        name: "login",
-        builder: (context, state) => const LoginScreen(),
+        builder: (_, __) => const LoginScreen(),
         routes: [
           GoRoute(
             path: "otp",
-            name: "otp",
-            builder: (context, state) {
-              final phone = state.extra as String? ?? "";
-              return OtpScreen(phone: phone);
-            },
+            builder: (_, state) =>
+                OtpScreen(phone: state.extra as String? ?? ""),
           ),
         ],
       ),
       GoRoute(
         path: "/register",
-        name: "register",
-        builder: (context, state) => const RegisterScreen(),
+        builder: (_, __) => const RegisterScreen(),
       ),
-      // ── 5 nouveaux services ────────────────────────────────────────────────
+
+      // ── OZEL EVENT ──────────────────────────────────────────────────────────
       GoRoute(
         path: "/ozel-event",
-        name: "ozel-event",
-        builder: (context, state) => const OzelEventScreen(),
+        builder: (_, state) => const OzelEventHomeScreen(),
       ),
+      GoRoute(
+        path: "/ozel-event/devis",
+        builder: (_, state) =>
+            OzelEventDevisScreen(typeInitial: state.extra as String?),
+      ),
+      GoRoute(
+        path: "/ozel-event/paiement",
+        builder: (_, state) => OzelEventPaiementScreen(
+            data: state.extra as Map<String, dynamic>),
+      ),
+      GoRoute(
+        path: "/ozel-event/confirmation",
+        builder: (_, state) => OzelEventConfirmationScreen(
+            data: state.extra as Map<String, dynamic>),
+      ),
+      GoRoute(
+        path: "/ozel-event/reservations",
+        builder: (_, __) => const OzelEventReservationsScreen(),
+      ),
+
+      // ── OZEL HOTESSES ───────────────────────────────────────────────────────
       GoRoute(
         path: "/ozel-hotesses",
-        name: "ozel-hotesses",
-        builder: (context, state) => const OzelHotessesScreen(),
+        builder: (_, __) => const OzelHotessesHomeScreen(),
       ),
+      GoRoute(
+        path: "/ozel-hotesses/reservation",
+        builder: (_, state) => OzelHotessesReservationScreen(
+            hotesse: state.extra as HotesseModel),
+      ),
+      GoRoute(
+        path: "/ozel-hotesses/reservations",
+        builder: (_, __) => const OzelHotessesMesReservationsScreen(),
+      ),
+
+      // ── OZEL TOURS ──────────────────────────────────────────────────────────
       GoRoute(
         path: "/ozel-tours",
-        name: "ozel-tours",
-        builder: (context, state) => const OzelToursScreen(),
+        builder: (_, __) => const OzelToursHomeScreen(),
       ),
+      GoRoute(
+        path: "/ozel-tours/circuit/:id",
+        builder: (_, state) => OzelToursCircuitDetailScreen(
+            circuit: state.extra as CircuitModel),
+      ),
+      GoRoute(
+        path: "/ozel-tours/reservation",
+        builder: (_, state) => OzelToursReservationScreen(
+            circuit: state.extra as CircuitModel),
+      ),
+      GoRoute(
+        path: "/ozel-tours/ebillet",
+        builder: (_, state) => OzelToursEbilletScreen(
+            reservation: state.extra as TourReservation?),
+      ),
+
+      // ── OZEL SECURITES ──────────────────────────────────────────────────────
       GoRoute(
         path: "/ozel-securites",
-        name: "ozel-securites",
-        builder: (context, state) => const OzelSecuritesScreen(),
+        builder: (_, __) => const OzelSecuritesHomeScreen(),
       ),
+      GoRoute(
+        path: "/ozel-securites/jardinage",
+        builder: (_, __) => const OzelSecuritesJardinageScreen(),
+      ),
+      GoRoute(
+        path: "/ozel-securites/vigile",
+        builder: (_, __) => const OzelSecuritesVigileScreen(),
+      ),
+      GoRoute(
+        path: "/ozel-securites/urgence",
+        builder: (_, __) => const OzelSecuritesUrgenceScreen(),
+      ),
+      GoRoute(
+        path: "/ozel-securites/contrats",
+        builder: (_, __) => const OzelSecuritesMesContratsScreen(),
+      ),
+
+      // ── OZELTIC ─────────────────────────────────────────────────────────────
       GoRoute(
         path: "/ozel-tic",
-        name: "ozel-tic",
-        builder: (context, state) => const OzelTicScreen(),
+        builder: (_, __) => const OzelTicHomeScreen(),
       ),
-      StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) {
-          return MainShellScreen(navigationShell: navigationShell);
-        },
-        branches: [
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: "/accueil",
-                name: "accueil",
-                builder: (context, state) => const HomeDashboardScreen(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: "/ozelfoods",
-                name: "ozelfoods",
-                builder: (context, state) => const RestaurantListScreen(),
-                routes: [
-                  GoRoute(
-                    path: "restaurant/:id",
-                    name: "restaurant",
-                    builder: (context, state) {
-                      final id = state.pathParameters["id"]!;
-                      return RestaurantMenuScreen(restaurantId: id);
-                    },
-                  ),
-                  GoRoute(
-                    path: "panier",
-                    name: "panier",
-                    builder: (context, state) => const CartScreen(),
-                  ),
-                  GoRoute(
-                    path: "checkout",
-                    name: "checkout",
-                    builder: (context, state) => const CheckoutScreen(),
-                  ),
-                  GoRoute(
-                    path: "suivi/:orderId",
-                    name: "suivi-food",
-                    builder: (context, state) {
-                      final id = state.pathParameters["orderId"]!;
-                      return OrderTrackingScreen(orderId: id);
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: "/rapid-colis",
-                name: "rapid-colis",
-                builder: (context, state) => const ColisFormScreen(),
-                routes: [
-                  GoRoute(
-                    path: "devis",
-                    name: "colis-devis",
-                    builder: (context, state) => const ColisQuoteScreen(),
-                  ),
-                  GoRoute(
-                    path: "confirmation",
-                    name: "colis-confirm",
-                    builder: (context, state) => const ColisConfirmScreen(),
-                  ),
-                  GoRoute(
-                    path: "suivi",
-                    name: "colis-suivi",
-                    builder: (context, state) => const ColisTrackingScreen(),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: "/wallet",
-                name: "wallet",
-                builder: (context, state) => const WalletScreen(),
-                routes: [
-                  GoRoute(
-                    path: "recharge",
-                    name: "wallet-recharge",
-                    builder: (context, state) => const RechargeMomoScreen(),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: "/profil",
-                name: "profil",
-                builder: (context, state) => const ProfileScreen(),
-              ),
-            ],
-          ),
-        ],
+      GoRoute(
+        path: "/ozel-tic/depannage",
+        builder: (_, __) => const OzelTicDepannageScreen(),
       ),
-    ],
-  );
-  ref.onDispose(router.dispose);
-  return router;
-});
+      GoRoute(
+        path: "/ozel-tic/devis",
+        builder: (_, __) => const OzelTicDevisScreen(),
+      ),
+      GoRoute(
+        path: "/ozel-tic/domaine",
+        builder: (_, __) => const OzelTicDomaineScreen(),
+      ),
+      GoRoute(
+        path: "/ozel-tic/tickets",
+        builder: (_, __) => const OzelTicMesTicketsScreen(),
+      ),
 
-final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: "root");
-
-/// Configuration GoRouter (shell à 5 onglets + flux auth).
-final goRouterProvider = Provider<GoRouter>((ref) {
-  final router = GoRouter(
-    navigatorKey: _rootNavigatorKey,
-    initialLocation: "/splash",
-    routes: [
-      GoRoute(
-        path: "/",
-        name: "root",
-        redirect: (context, state) => "/splash",
-      ),
-      GoRoute(
-        path: "/splash",
-        name: "splash",
-        builder: (context, state) => const SplashScreen(),
-      ),
-      GoRoute(
-        path: "/onboarding",
-        name: "onboarding",
-        builder: (context, state) => const OnboardingScreen(),
-      ),
-      GoRoute(
-        path: "/login",
-        name: "login",
-        builder: (context, state) => const LoginScreen(),
-        routes: [
-          GoRoute(
-            path: "otp",
-            name: "otp",
-            builder: (context, state) {
-              final phone = state.extra as String? ?? "";
-              return OtpScreen(phone: phone);
-            },
-          ),
-        ],
-      ),
-      GoRoute(
-        path: "/register",
-        name: "register",
-        builder: (context, state) => const RegisterScreen(),
-      ),
+      // ── SHELL (5 onglets) ───────────────────────────────────────────────────
       StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) {
-          return MainShellScreen(navigationShell: navigationShell);
-        },
+        builder: (_, __, navigationShell) =>
+            MainShellScreen(navigationShell: navigationShell),
         branches: [
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: "/accueil",
-                name: "accueil",
-                builder: (context, state) => const HomeDashboardScreen(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: "/ozelfoods",
-                name: "ozelfoods",
-                builder: (context, state) => const RestaurantListScreen(),
-                routes: [
-                  GoRoute(
-                    path: "restaurant/:id",
-                    name: "restaurant",
-                    builder: (context, state) {
-                      final id = state.pathParameters["id"]!;
-                      return RestaurantMenuScreen(restaurantId: id);
-                    },
-                  ),
-                  GoRoute(
-                    path: "panier",
-                    name: "panier",
-                    builder: (context, state) => const CartScreen(),
-                  ),
-                  GoRoute(
-                    path: "checkout",
-                    name: "checkout",
-                    builder: (context, state) => const CheckoutScreen(),
-                  ),
-                  GoRoute(
-                    path: "suivi/:orderId",
-                    name: "suivi-food",
-                    builder: (context, state) {
-                      final id = state.pathParameters["orderId"]!;
-                      return OrderTrackingScreen(orderId: id);
-                    },
-                  ),
-                ],
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: "/rapid-colis",
-                name: "rapid-colis",
-                builder: (context, state) => const ColisFormScreen(),
-                routes: [
-                  GoRoute(
-                    path: "devis",
-                    name: "colis-devis",
-                    builder: (context, state) => const ColisQuoteScreen(),
-                  ),
-                  GoRoute(
-                    path: "confirmation",
-                    name: "colis-confirm",
-                    builder: (context, state) => const ColisConfirmScreen(),
-                  ),
-                  GoRoute(
-                    path: "suivi",
-                    name: "colis-suivi",
-                    builder: (context, state) => const ColisTrackingScreen(),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: "/wallet",
-                name: "wallet",
-                builder: (context, state) => const WalletScreen(),
-                routes: [
-                  GoRoute(
-                    path: "recharge",
-                    name: "wallet-recharge",
-                    builder: (context, state) => const RechargeMomoScreen(),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: "/profil",
-                name: "profil",
-                builder: (context, state) => const ProfileScreen(),
-              ),
-            ],
-          ),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: "/accueil",
+              builder: (_, __) => const HomeDashboardScreen(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: "/ozelfoods",
+              builder: (_, __) => const RestaurantListScreen(),
+              routes: [
+                GoRoute(
+                  path: "restaurant/:id",
+                  builder: (_, state) => RestaurantMenuScreen(
+                      restaurantId: state.pathParameters["id"]!),
+                ),
+                GoRoute(
+                  path: "panier",
+                  builder: (_, __) => const CartScreen(),
+                ),
+                GoRoute(
+                  path: "checkout",
+                  builder: (_, __) => const CheckoutScreen(),
+                ),
+                GoRoute(
+                  path: "suivi/:orderId",
+                  builder: (_, state) => OrderTrackingScreen(
+                      orderId: state.pathParameters["orderId"]!),
+                ),
+              ],
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: "/rapid-colis",
+              builder: (_, __) => const ColisFormScreen(),
+              routes: [
+                GoRoute(
+                  path: "devis",
+                  builder: (_, __) => const ColisQuoteScreen(),
+                ),
+                GoRoute(
+                  path: "confirmation",
+                  builder: (_, __) => const ColisConfirmScreen(),
+                ),
+                GoRoute(
+                  path: "suivi",
+                  builder: (_, __) => const ColisTrackingScreen(),
+                ),
+              ],
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: "/wallet",
+              builder: (_, __) => const WalletScreen(),
+              routes: [
+                GoRoute(
+                  path: "recharge",
+                  builder: (_, __) => const RechargeMomoScreen(),
+                ),
+              ],
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: "/profil",
+              builder: (_, __) => const ProfileScreen(),
+            ),
+          ]),
         ],
       ),
     ],
