@@ -68,7 +68,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       return;
     }
     if (!snap.isLoggedIn) {
-      context.go("/login");
+      // Nouveau utilisateur → inscription obligatoire (style Gozem/Yango)
+      context.go("/register");
       return;
     }
     context.go("/accueil");

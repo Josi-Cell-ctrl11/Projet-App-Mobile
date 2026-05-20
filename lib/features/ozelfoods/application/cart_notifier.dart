@@ -62,6 +62,17 @@ class CartNotifier extends Notifier<List<CartLine>> {
     state = next;
   }
 
+  /// Incremente la quantite d'un plat dans le panier.
+  void incrementLine(String menuItemId) {
+    state = [
+      for (final line in state)
+        if (line.item.id == menuItemId)
+          line.copyWith(quantity: line.quantity + 1)
+        else
+          line,
+    ];
+  }
+
   double get subtotal =>
       state.fold<double>(0, (sum, line) => sum + line.lineTotal);
 }

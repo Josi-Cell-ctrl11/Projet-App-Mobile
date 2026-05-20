@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/services/receipt_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/models/tour_reservation.dart';
@@ -154,6 +155,43 @@ class OzelToursEbilletScreen extends StatelessWidget {
                         style: TextStyle(fontWeight: FontWeight.w700)),
                   ),
                 ),
+                const SizedBox(height: 10),
+                // Bouton recu PDF
+                if (reservation != null)
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: FilledButton.icon(
+                      onPressed: () {
+                        ReceiptService.generateAndShowReceipt(
+                          numeroCommande: reservation!.id,
+                          typeService: 'Ozel Tours',
+                          nomClient: 'Client OZELSERVICES',
+                          dateCommande: DateTime.now()
+                              .toString()
+                              .substring(0, 16),
+                          lignes: [
+                            {
+                              'description':
+                                  'Circuit ${reservation!.destination} x${reservation!.nbPersonnes}',
+                              'montant': reservation!.montant
+                                  .toStringAsFixed(0),
+                            },
+                          ],
+                          total: reservation!.montant,
+                          modePaiement: 'MoMo / FedaPay',
+                        );
+                      },
+                      style: FilledButton.styleFrom(
+                        backgroundColor: _color,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                      ),
+                      icon: const Icon(Icons.picture_as_pdf_rounded),
+                      label: const Text('Telecharger le recu PDF',
+                          style: TextStyle(fontWeight: FontWeight.w700)),
+                    ),
+                  ),
               ],
             ),
     );

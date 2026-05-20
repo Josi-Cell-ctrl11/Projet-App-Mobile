@@ -76,17 +76,13 @@ class CartScreen extends ConsumerWidget {
                                   ),
                                   Text("${line.quantity}"),
                                   IconButton(
-                                    onPressed: () {
-                                      // Ré-ajout via navigation menu : MVP simple
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            "Ajoutez à nouveau depuis le menu du restaurant.",
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    icon: const Icon(Icons.add_circle_outline),
+                                    onPressed: () => ref
+                                        .read(cartProvider.notifier)
+                                        .incrementLine(line.item.id),
+                                    icon: const Icon(
+                                      Icons.add_circle_outline,
+                                      color: AppColors.primary,
+                                    ),
                                   ),
                                 ],
                               ),
