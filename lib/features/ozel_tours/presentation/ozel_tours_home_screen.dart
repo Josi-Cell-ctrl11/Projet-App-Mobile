@@ -49,9 +49,14 @@ class _OzelToursHomeScreenState extends ConsumerState<OzelToursHomeScreen>
   Widget build(BuildContext context) {
     final circuits = ref.watch(circuitsProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.surface,
-      body: NestedScrollView(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) context.go('/accueil');
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.surface,
+        body: NestedScrollView(
         headerSliverBuilder: (context, _) => [
           SliverAppBar(
             pinned: true,
@@ -133,6 +138,7 @@ class _OzelToursHomeScreenState extends ConsumerState<OzelToursHomeScreen>
           ],
         ),
       ),
+    ),
     );
   }
 }

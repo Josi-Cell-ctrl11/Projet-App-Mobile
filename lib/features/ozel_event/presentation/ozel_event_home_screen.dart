@@ -10,10 +10,15 @@ class OzelEventHomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.surface,
-      body: CustomScrollView(
-        slivers: [
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) context.go('/accueil');
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.surface,
+        body: CustomScrollView(
+          slivers: [
           // ── Header violet ────────────────────────────────────────────────
           SliverAppBar(
             expandedHeight: 180,
@@ -181,6 +186,7 @@ class OzelEventHomeScreen extends StatelessWidget {
             ),
           ),
         ],
+        ),
       ),
     );
   }

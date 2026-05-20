@@ -487,7 +487,16 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
                   child: SectionTitle(
                     "Nos services",
                     action: TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        // Scroll to services section or show all services
+                        // For now, show a message that all services are already visible
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Tous les services sont déjà affichés'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      },
                       child: const Text(
                         "Voir tout",
                         style: TextStyle(
@@ -544,7 +553,15 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
                   child: SectionTitle(
                     "Commandes récentes",
                     action: TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        // Navigate to orders history page (to be implemented)
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Historique des commandes - bientôt disponible'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      },
                       child: const Text(
                         "Tout voir",
                         style: TextStyle(
