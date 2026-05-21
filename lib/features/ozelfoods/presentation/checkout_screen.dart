@@ -429,18 +429,18 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                     border: Border.all(
                         color: AppColors.warning.withValues(alpha: 0.25)),
                   ),
-                  child: const Row(
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.delivery_dining_rounded,
+                      const Icon(Icons.delivery_dining_rounded,
                           color: AppColors.warning, size: 18),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           "Les frais de livraison (${Formatters.fcfa(deliveryFee)}) sont regles "
                           "directement au livreur lors de la remise du repas. "
                           "Sans paiement, le livreur ne remet pas le repas.",
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: AppColors.warning,
                             fontSize: 12,
                             height: 1.4,
