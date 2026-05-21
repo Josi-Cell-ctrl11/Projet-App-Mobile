@@ -158,8 +158,7 @@ class CartScreen extends ConsumerWidget {
                         OzelPrimaryButton(
                           label: "Commander",
                           enabled: meets,
-                          onPressed: () =>
-                              context.push("/ozelfoods/checkout"),
+                          onPressed: () => _showOrderTypeBottomSheet(context),
                         ),
                       ],
                     ),
@@ -167,6 +166,164 @@ class CartScreen extends ConsumerWidget {
                 ),
               ],
             ),
+    );
+  }
+
+  void _showOrderTypeBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "Comment souhaitez-vous commander ?",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: AppColors.black,
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Option sur place
+            _OrderTypeOption(
+              icon: Icons.restaurant_rounded,
+              title: "🍽️ Manger sur place",
+              subtitle: "Je viens au restaurant avec mon QR code",
+              onTap: () {
+                Navigator.pop(ctx);
+                _showSurPlaceDialog(context);
+              },
+            ),
+            const SizedBox(height: 12),
+            // Option livraison
+            _OrderTypeOption(
+              icon: Icons.delivery_dining_rounded,
+              title: "🛵 Me faire livrer",
+              subtitle: "Livraison à mon adresse",
+              onTap: () {
+                Navigator.pop(ctx);
+                context.push("/ozelfoods/checkout");
+              },
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showSurPlaceDialog(BuildContext context) {
+    final TextEditingController heureCtrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Manger sur place"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: heureCtrl,
+              decoration: const InputDecoration(
+                labelText: "Heure d'arrivée prévue",
+                hintText: "Ex: 12h30",
+                prefixIcon: Icon(Icons.access_time_rounded),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Annuler"),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              // TODO: Generate QR code and navigate to table_qrcode_screen
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("QR code généré (mock)"),
+                ),
+              );
+            },
+            child: const Text("Confirmer"),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OrderTypeOption extends StatelessWidget {
+  const _OrderTypeOption({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: AppColors.primary, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: AppColors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
+          ],
+        ),
+      ),
     );
   }
 }

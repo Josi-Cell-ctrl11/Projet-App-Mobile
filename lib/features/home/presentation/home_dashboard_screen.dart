@@ -137,13 +137,6 @@ class _HomeDashboardScreenState extends ConsumerState<HomeDashboardScreen> {
           enabled: true,
         ),
         const ServiceTileModel(
-          id: "hotesses",
-          title: "Ozel Hôtesses",
-          icon: Icons.support_agent_rounded,
-          routePath: "/ozel-hotesses",
-          enabled: true,
-        ),
-        const ServiceTileModel(
           id: "tours",
           title: "Ozel Tours",
           icon: Icons.tour_rounded,

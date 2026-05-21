@@ -21,7 +21,7 @@ class OzelEventMesReservationsScreen extends ConsumerWidget {
         foregroundColor: AppColors.white,
         elevation: 0,
         title: const Text(
-          "Mes événements",
+          "Mes demandes",
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
       ),
@@ -91,23 +91,18 @@ class _ReservationCard extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          // Montant
+          // WhatsApp contact info
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "Total",
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                ),
-              ),
+              Icon(Icons.chat_rounded,
+                  size: 16, color: AppColors.primary),
+              const SizedBox(width: 4),
               Text(
-                Formatters.fcfa(reservation.montantTotal),
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 16,
-                  color: Color(0xFF6A1B9A),
+                "Contact WhatsApp sous 2h",
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],

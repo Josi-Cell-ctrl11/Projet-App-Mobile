@@ -4,41 +4,24 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/ozel_text_field.dart';
 
-/// Ecran demande de devis Jardinage Ozel Securites.
-class OzelSecuritesJardinageScreen extends ConsumerStatefulWidget {
-  const OzelSecuritesJardinageScreen({super.key});
+/// Ecran demande de devis Nounou Ozel Securites.
+class NounouScreen extends ConsumerStatefulWidget {
+  const NounouScreen({super.key});
 
   @override
-  ConsumerState<OzelSecuritesJardinageScreen> createState() =>
-      _OzelSecuritesJardinageScreenState();
+  ConsumerState<NounouScreen> createState() => _NounouScreenState();
 }
 
-class _OzelSecuritesJardinageScreenState
-    extends ConsumerState<OzelSecuritesJardinageScreen> {
-  static const Color _color = Color(0xFF2E7D32);
+class _NounouScreenState extends ConsumerState<NounouScreen> {
+  static const Color _color = Color(0xFF37474F);
   
   final _adresse = TextEditingController();
   final _whatsapp = TextEditingController();
   final _notes = TextEditingController();
-  String _typePrestation = 'abonnement';
-  DateTime? _dateSouhaitee;
-  String _superficie = '<100m²';
+  String _typeService = 'garde';
+  String _frequence = 'quotidien';
+  String _nbEnfants = '1';
   bool _loading = false;
-
-  Future<void> _pickDate() async {
-    final d = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().add(const Duration(days: 3)),
-      firstDate: DateTime.now().add(const Duration(days: 1)),
-      lastDate: DateTime.now().add(const Duration(days: 60)),
-      builder: (ctx, child) => Theme(
-        data: Theme.of(ctx)
-            .copyWith(colorScheme: const ColorScheme.light(primary: _color)),
-        child: child!,
-      ),
-    );
-    if (d != null) setState(() => _dateSouhaitee = d);
-  }
 
   Future<void> _demanderDevis() async {
     if (_adresse.text.trim().isEmpty || _whatsapp.text.trim().isEmpty) {
@@ -110,74 +93,102 @@ class _OzelSecuritesJardinageScreenState
       appBar: AppBar(
         backgroundColor: _color,
         foregroundColor: AppColors.white,
-        title: const Text('Jardinage & Espaces verts',
+        title: const Text('Nounou / Garde d\'enfants',
             style: TextStyle(fontWeight: FontWeight.w800)),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Type de prestation
-          const Text('Type de prestation',
+          // Type de service
+          const Text('Type de service',
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
           const SizedBox(height: 10),
           _RadioOption(
-            label: 'Abonnement mensuel',
-            subtitle: '4 passages par mois',
-            selected: _typePrestation == 'abonnement',
+            label: 'Garde à domicile',
+            subtitle: 'Chez vous',
+            selected: _typeService == 'garde',
             color: _color,
-            onTap: () => setState(() => _typePrestation = 'abonnement'),
+            onTap: () => setState(() => _typeService = 'garde'),
           ),
           const SizedBox(height: 8),
           _RadioOption(
-            label: 'Prestation one-shot',
-            subtitle: 'Passage unique',
-            selected: _typePrestation == 'oneshot',
+            label: 'Garde partagée',
+            subtitle: 'Avec d\'autres familles',
+            selected: _typeService == 'partagee',
             color: _color,
-            onTap: () => setState(() => _typePrestation = 'oneshot'),
+            onTap: () => setState(() => _typeService = 'partagee'),
+          ),
+          const SizedBox(height: 8),
+          _RadioOption(
+            label: 'Sorties accompagnées',
+            subtitle: 'Parcs, écoles, activités',
+            selected: _typeService == 'sorties',
+            color: _color,
+            onTap: () => setState(() => _typeService = 'sorties'),
           ),
           const SizedBox(height: 16),
 
-          // Date souhaitée
-          const Text('Date souhaitée',
+          // Fréquence
+          const Text('Fréquence',
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
           const SizedBox(height: 8),
-          GestureDetector(
-            onTap: _pickDate,
-            child: Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.calendar_today_rounded,
-                      color: Color(0xFF2E7D32), size: 20),
-                  const SizedBox(width: 12),
-                  Text(
-                    _dateSouhaitee == null
-                        ? 'Choisir une date'
-                        : '${_dateSouhaitee!.day}/${_dateSouhaitee!.month}/${_dateSouhaitee!.year}',
-                    style: TextStyle(
-                      color: _dateSouhaitee == null
-                          ? AppColors.textSecondary
-                          : AppColors.black,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _frequence,
+                isExpanded: true,
+                items: const [
+                  DropdownMenuItem(
+                      value: 'ponctuel', child: Text('Ponctuel')),
+                  DropdownMenuItem(
+                      value: 'quotidien', child: Text('Quotidien')),
+                  DropdownMenuItem(
+                      value: 'hebdomadaire', child: Text('Hebdomadaire')),
                 ],
+                onChanged: (v) => setState(() => _frequence = v!),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Nombre d'enfants
+          const Text('Nombre d\'enfants',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _nbEnfants,
+                isExpanded: true,
+                items: const [
+                  DropdownMenuItem(value: '1', child: Text('1 enfant')),
+                  DropdownMenuItem(value: '2', child: Text('2 enfants')),
+                  DropdownMenuItem(value: '3', child: Text('3 enfants')),
+                  DropdownMenuItem(value: '4+', child: Text('4+ enfants')),
+                ],
+                onChanged: (v) => setState(() => _nbEnfants = v!),
               ),
             ),
           ),
           const SizedBox(height: 16),
 
           // Adresse
-          const Text('Adresse du jardin',
+          const Text('Adresse',
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
           const SizedBox(height: 8),
           OzelTextField(
             controller: _adresse,
-            label: 'Ex: Haie Vive, Cotonou',
+            label: 'Ex: Cadjèhoun, Cotonou',
             prefixIcon: Icons.place_rounded,
           ),
           const SizedBox(height: 16),
@@ -191,34 +202,6 @@ class _OzelSecuritesJardinageScreenState
             label: '+229 XX XX XX XX',
             prefixIcon: Icons.chat_rounded,
             keyboardType: TextInputType.phone,
-          ),
-          const SizedBox(height: 16),
-
-          // Superficie
-          const Text('Superficie estimée',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-          const SizedBox(height: 8),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: _superficie,
-                isExpanded: true,
-                items: const [
-                  DropdownMenuItem(
-                      value: '<100m²', child: Text('Moins de 100 m²')),
-                  DropdownMenuItem(
-                      value: '100-300m²', child: Text('100 à 300 m²')),
-                  DropdownMenuItem(
-                      value: '>300m²', child: Text('Plus de 300 m²')),
-                ],
-                onChanged: (v) => setState(() => _superficie = v!),
-              ),
-            ),
           ),
           const SizedBox(height: 16),
 
@@ -281,12 +264,16 @@ class _RadioOption extends StatelessWidget {
           color: selected ? color.withValues(alpha: 0.06) : AppColors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-              color: selected ? color.withValues(alpha: 0.4) : AppColors.disabled),
+              color: selected
+                  ? color.withValues(alpha: 0.4)
+                  : AppColors.disabled),
         ),
         child: Row(
           children: [
             Icon(
-              selected ? Icons.radio_button_checked : Icons.radio_button_off,
+              selected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_off,
               color: selected ? color : AppColors.textSecondary,
             ),
             const SizedBox(width: 12),

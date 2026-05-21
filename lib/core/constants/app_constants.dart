@@ -15,6 +15,11 @@ abstract final class AppConstants {
   /// 1 FCFA dépensé = 1 point Ozel (arrondi sur total payé).
   static int fcfaToPoints(double fcfa) => fcfa.floor();
 
+  /// Système de points Ozel
+  static const int pointsParFcfa = 1; // 1 FCFA = 1 point
+  static const int pointsPourLivraisonGratuite = 10; // 10 points = 1 livraison gratuite
+  static const double valeurPoint = 1.0; // 1 point = 1 FCFA de réduction
+
   /// Clé FedaPay publique (placeholder — à remplacer par ta clé réelle).
   static const String fedapayPublicKeyPlaceholder = "pk_live_OR_test_FEDAPAY";
 

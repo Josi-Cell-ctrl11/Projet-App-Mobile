@@ -75,7 +75,7 @@ class OzelTicHomeScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Grille 4 services
+                  // Grille 6 services
                   const Text('Nos services',
                       style: TextStyle(
                           fontSize: 17,
@@ -110,6 +110,20 @@ class OzelTicHomeScreen extends ConsumerWidget {
                         subtitle: '.bj .com .net',
                         color: _color,
                         onTap: () => context.push('/ozel-tic/domaine'),
+                      ),
+                      _ServiceTile(
+                        emoji: '📹',
+                        title: 'Caméras',
+                        subtitle: 'Surveillance',
+                        color: _color,
+                        onTap: () => context.push('/ozel-tic/cameras'),
+                      ),
+                      _ServiceTile(
+                        emoji: '🌐',
+                        title: 'Réseaux',
+                        subtitle: 'WiFi, câblage',
+                        color: _color,
+                        onTap: () => context.push('/ozel-tic/reseaux'),
                       ),
                       _ServiceTile(
                         emoji: '💬',
@@ -278,11 +292,6 @@ class _TicketMiniCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(Formatters.fcfa(ticket.montant),
-                  style: TextStyle(
-                      color: _color,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12)),
               Container(
                 padding: const EdgeInsets.symmetric(
                     horizontal: 6, vertical: 2),

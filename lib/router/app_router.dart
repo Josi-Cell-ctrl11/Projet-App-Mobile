@@ -16,11 +16,6 @@ import "../features/ozel_event/presentation/ozel_event_paiement_screen.dart";
 import "../features/ozel_event/presentation/ozel_event_confirmation_screen.dart";
 import "../features/ozel_event/presentation/ozel_event_reservations_screen.dart";
 
-// ── Ozel Hotesses ─────────────────────────────────────────────────────────────
-import "../features/ozel_hotesses/presentation/ozel_hotesses_home_screen.dart";
-import "../features/ozel_hotesses/presentation/ozel_hotesses_reservation_screen.dart";
-import "../features/ozel_hotesses/presentation/ozel_hotesses_mes_reservations_screen.dart";
-
 // ── Ozel Tours ────────────────────────────────────────────────────────────────
 import "../features/ozel_tours/presentation/ozel_tours_home_screen.dart";
 import "../features/ozel_tours/presentation/ozel_tours_circuit_detail_screen.dart";
@@ -120,21 +115,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: "/ozel-event/reservations",
         builder: (_, __) => const OzelEventReservationsScreen(),
-      ),
-
-      // ── OZEL HOTESSES ───────────────────────────────────────────────────────
-      GoRoute(
-        path: "/ozel-hotesses",
-        builder: (_, __) => const OzelHotessesHomeScreen(),
-      ),
-      GoRoute(
-        path: "/ozel-hotesses/reservation",
-        builder: (_, state) => OzelHotessesReservationScreen(
-            hotesse: state.extra as HotesseModel),
-      ),
-      GoRoute(
-        path: "/ozel-hotesses/reservations",
-        builder: (_, __) => const OzelHotessesMesReservationsScreen(),
       ),
 
       // ── OZEL TOURS ──────────────────────────────────────────────────────────

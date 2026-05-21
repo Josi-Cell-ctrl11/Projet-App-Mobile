@@ -14,6 +14,19 @@ import "../application/cart_notifier.dart";
 import "../application/food_orders_notifier.dart";
 import "cart_screen.dart";
 
+/// Zones de livraison avec frais
+enum DeliveryZone {
+  cotonouCentre(label: "📍 Cotonou centre", feeFcfa: 1000),
+  cotonouPeripherie(label: "📍 Cotonou périphérie", feeFcfa: 1500),
+  calavi(label: "📍 Calavi / Abomey-Calavi", feeFcfa: 2000),
+  autreZone(label: "📍 Autre zone", feeFcfa: 2500);
+
+  final String label;
+  final double feeFcfa;
+
+  const DeliveryZone({required this.label, required this.feeFcfa});
+}
+
 /// Checkout OzelFoods — logique rapport client :
 /// - Paiement du repas obligatoire a l'avance (MoMo)
 /// - Frais de livraison affiches separement, regles a la remise
@@ -30,9 +43,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     text: "Haie Vive, Cotonou — pres de St Michel",
   );
   PaymentMethod _method = PaymentMethod.mtnMomo;
+  DeliveryZone _zone = DeliveryZone.cotonouCentre;
   bool _simulateLate = false;
   bool _simulateRestaurantReject = false;
   bool _loading = false;
+
+  double get deliveryFee => _zone.feeFcfa;
 
   @override
   void dispose() {
@@ -87,7 +103,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             const SizedBox(height: 8),
             _PaymentRow(
               label: "Frais de livraison",
-              amount: CartScreen.deliveryFeeFcfa,
+              amount: deliveryFee,
               color: AppColors.textSecondary,
               note: "A regler a la remise",
             ),
@@ -107,17 +123,17 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 border: Border.all(
                     color: AppColors.warning.withValues(alpha: 0.3)),
               ),
-              child: const Row(
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.info_outline_rounded,
+                  const Icon(Icons.info_outline_rounded,
                       color: AppColors.warning, size: 14),
-                  SizedBox(width: 6),
+                  const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      "Les frais de livraison (500 FCFA) sont regles "
+                      "Les frais de livraison (${Formatters.fcfa(deliveryFee)}) sont regles "
                       "directement au livreur a la remise du repas.",
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 11,
                         color: AppColors.warning,
                         height: 1.4,
@@ -158,7 +174,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final restaurantName = cart.first.restaurantName;
     final order = ref.read(foodOrdersProvider.notifier).startOrder(
           restaurantName: restaurantName,
-          totalFcfa: subtotal + CartScreen.deliveryFeeFcfa,
+          totalFcfa: subtotal + deliveryFee,
           restaurantAccepted: !_simulateRestaurantReject,
           lateMinutes: _simulateLate ? 20 : 0,
         );
@@ -207,6 +223,70 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   label: "Adresse complete",
                   maxLines: 2,
                   prefixIcon: Icons.place_outlined,
+                ),
+
+                const SizedBox(height: 20),
+
+                // ── Zone de livraison ───────────────────────────────────────────
+                _SectionTitle(
+                    icon: Icons.location_on_rounded, label: "Zone de livraison"),
+                const SizedBox(height: 10),
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: DeliveryZone.values.map((zone) {
+                      final selected = zone == _zone;
+                      return GestureDetector(
+                        onTap: () => setState(() => _zone = zone),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? AppColors.primary.withValues(alpha: 0.06)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                            border: selected
+                                ? Border.all(
+                                    color: AppColors.primary.withValues(alpha: 0.3))
+                                : null,
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  zone.label,
+                                  style: TextStyle(
+                                    fontWeight:
+                                        selected ? FontWeight.w700 : FontWeight.w400,
+                                    color: selected
+                                        ? AppColors.primary
+                                        : AppColors.black,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                Formatters.fcfa(zone.feeFcfa),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: selected
+                                      ? AppColors.primary
+                                      : AppColors.textSecondary,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              if (selected)
+                                const Icon(Icons.check_circle_rounded,
+                                    color: AppColors.primary, size: 20),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
                 ),
 
                 const SizedBox(height: 20),
@@ -304,7 +384,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                             ],
                           ),
                           Text(
-                            Formatters.fcfa(CartScreen.deliveryFeeFcfa),
+                            Formatters.fcfa(deliveryFee),
                             style: const TextStyle(
                               color: AppColors.textSecondary,
                               fontWeight: FontWeight.w600,
@@ -357,7 +437,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          "Les frais de livraison (500 FCFA) sont regles "
+                          "Les frais de livraison (${Formatters.fcfa(deliveryFee)}) sont regles "
                           "directement au livreur lors de la remise du repas. "
                           "Sans paiement, le livreur ne remet pas le repas.",
                           style: TextStyle(

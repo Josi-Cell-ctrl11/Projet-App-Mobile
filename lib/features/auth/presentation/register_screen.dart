@@ -33,6 +33,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   // ── Etape 2 ────────────────────────────────────────────────────────────────
   final _phone = TextEditingController(text: "+229");
   final _whatsapp = TextEditingController(text: "+229");
+  final _email = TextEditingController();
   final _npi = TextEditingController();
   bool _cguAccepted = false;
 
@@ -42,6 +43,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   String? _errPseudo;
   String? _errPhone;
   String? _errWhatsapp;
+  String? _errEmail;
   String? _errNpi;
   String? _errCgu;
 
@@ -54,6 +56,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _pseudo.dispose();
     _phone.dispose();
     _whatsapp.dispose();
+    _email.dispose();
     _npi.dispose();
     super.dispose();
   }
@@ -76,14 +79,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   // ── Validation etape 2 ─────────────────────────────────────────────────────
   bool _validerEtape2() {
     final phoneRegex = RegExp(r'^\+229\d{8}$');
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     final npiRegex = RegExp(r'^\d{10}$');
 
     setState(() {
       _errPhone = !phoneRegex.hasMatch(_phone.text.trim())
-          ? "Format invalide (+229XXXXXXXX)"
+          ? "Format invalide (+229 XX XX XX XX)"
           : null;
       _errWhatsapp = !phoneRegex.hasMatch(_whatsapp.text.trim())
-          ? "Format invalide (+229XXXXXXXX)"
+          ? "Format invalide (+229 XX XX XX XX)"
+          : null;
+      _errEmail = !emailRegex.hasMatch(_email.text.trim())
+          ? "Format email invalide"
           : null;
       _errNpi = !npiRegex.hasMatch(_npi.text.trim())
           ? "Le NPI doit contenir exactement 10 chiffres"
@@ -92,6 +99,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     });
     return _errPhone == null &&
         _errWhatsapp == null &&
+        _errEmail == null &&
         _errNpi == null &&
         _errCgu == null;
   }
@@ -121,6 +129,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       pseudo: _pseudo.text.trim(),
       phone: _phone.text.trim(),
       whatsapp: _whatsapp.text.trim(),
+      email: _email.text.trim(),
       npi: _npi.text.trim(),
       avatarUrl: _avatarPath,
       isProfileComplete: true,
@@ -321,7 +330,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         // WhatsApp
         OzelTextField(
           controller: _whatsapp,
-          label: "WhatsApp (+229XXXXXXXX) *",
+          label: "WhatsApp (+229 XX XX XX XX) *",
           keyboardType: TextInputType.phone,
           prefixIcon: Icons.chat_rounded,
         ),
@@ -329,6 +338,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         const SizedBox(height: 4),
         const Text(
           "Peut etre identique au numero de telephone",
+          style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+        ),
+        const SizedBox(height: 12),
+
+        // Email
+        OzelTextField(
+          controller: _email,
+          label: "Email *",
+          keyboardType: TextInputType.emailAddress,
+          prefixIcon: Icons.email_outlined,
+        ),
+        if (_errEmail != null) _ErrMsg(_errEmail!),
+        const SizedBox(height: 4),
+        const Text(
+          "📧 Utilisé pour vos factures mensuelles et vos points Ozel",
           style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
         ),
         const SizedBox(height: 12),
@@ -343,7 +367,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         if (_errNpi != null) _ErrMsg(_errNpi!),
         const SizedBox(height: 4),
         const Text(
-          "10 chiffres — Votre NPI beninois",
+          "10 chiffres — Le NPI sera vérifié par notre équipe sous 24h",
           style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
         ),
 

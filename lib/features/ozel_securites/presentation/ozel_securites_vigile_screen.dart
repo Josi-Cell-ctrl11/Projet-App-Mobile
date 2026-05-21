@@ -2,13 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/utils/formatters.dart';
-import '../../../shared/models/securite_contrat.dart';
-import '../../../shared/widgets/ozel_button.dart';
 import '../../../shared/widgets/ozel_text_field.dart';
-import '../application/ozel_securites_notifier.dart';
 
-/// Ecran demande vigile Ozel Securites.
+/// Ecran demande de devis Vigile Ozel Securites.
 class OzelSecuritesVigileScreen extends ConsumerStatefulWidget {
   const OzelSecuritesVigileScreen({super.key});
 
@@ -20,15 +16,14 @@ class OzelSecuritesVigileScreen extends ConsumerStatefulWidget {
 class _OzelSecuritesVigileScreenState
     extends ConsumerState<OzelSecuritesVigileScreen> {
   static const Color _color = Color(0xFF37474F);
-  bool _formule24h = false;
+  
+  String _formule = '12h';
   DateTime? _dateDebut;
   final _adresse = TextEditingController();
+  final _whatsapp = TextEditingController();
+  final _notes = TextEditingController();
   String _typeSite = 'Domicile';
   bool _loading = false;
-
-  static const int _dureeMoisMin = 3;
-  double get _tarifMensuel => _formule24h ? 150000 : 90000;
-  double get _totalContrat => _tarifMensuel * _dureeMoisMin;
 
   Future<void> _pickDate() async {
     final d = await showDatePicker(
@@ -45,11 +40,11 @@ class _OzelSecuritesVigileScreenState
     if (d != null) setState(() => _dateDebut = d);
   }
 
-  Future<void> _demanderContrat() async {
-    if (_adresse.text.trim().isEmpty || _dateDebut == null) {
+  Future<void> _demanderDevis() async {
+    if (_adresse.text.trim().isEmpty || _whatsapp.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Renseignez l\'adresse et la date de debut')),
+            content: Text('Renseignez l\'adresse et le WhatsApp')),
       );
       return;
     }
@@ -57,30 +52,56 @@ class _OzelSecuritesVigileScreenState
     await Future.delayed(const Duration(milliseconds: 800));
     setState(() => _loading = false);
 
-    final id =
-        'SC-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
-    ref.read(securiteContratsProvider.notifier).addContrat(
-          SecuriteContrat(
-            id: id,
-            type: TypeContrat.vigile,
-            formule: _formule24h ? '24h/24' : '12h/nuit',
-            dateDebut: _dateDebut!,
-            dureeMois: _dureeMoisMin,
-            montant: _tarifMensuel,
-            statut: StatutContrat.actif,
-            adresse: _adresse.text.trim(),
-          ),
-        );
-
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Contrat soumis ! Notre equipe vous contactera sous 24h.'),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.check_circle_rounded,
+                color: AppColors.success, size: 64),
+            const SizedBox(height: 16),
+            const Text(
+              '✅ Demande envoyée !',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Notre équipe vous contactera sous 2h sur WhatsApp\nau ${_whatsapp.text} pour établir votre devis.',
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.go('/ozel-securites');
+            },
+            child: const Text('OK'),
+          ),
+        ],
       ),
     );
-    context.go('/ozel-securites/contrats');
+  }
+
+  @override
+  void dispose() {
+    _adresse.dispose();
+    _whatsapp.dispose();
+    _notes.dispose();
+    super.dispose();
   }
 
   @override
@@ -102,45 +123,23 @@ class _OzelSecuritesVigileScreenState
           const SizedBox(height: 10),
           _RadioOpt(
             label: '12h/nuit',
-            subtitle: '90 000 FCFA/mois',
-            selected: !_formule24h,
+            subtitle: 'Surveillance nocturne',
+            selected: _formule == '12h',
             color: _color,
-            onTap: () => setState(() => _formule24h = false),
+            onTap: () => setState(() => _formule = '12h'),
           ),
           const SizedBox(height: 8),
           _RadioOpt(
             label: '24h/24',
-            subtitle: '150 000 FCFA/mois',
-            selected: _formule24h,
+            subtitle: 'Surveillance continue',
+            selected: _formule == '24h',
             color: _color,
-            onTap: () => setState(() => _formule24h = true),
-          ),
-          const SizedBox(height: 16),
-
-          // Info duree minimum
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: _color.withValues(alpha: 0.06),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.info_outline_rounded,
-                    color: Color(0xFF37474F), size: 16),
-                SizedBox(width: 8),
-                Text('Contrat minimum : 3 mois',
-                    style: TextStyle(
-                        color: Color(0xFF37474F),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13)),
-              ],
-            ),
+            onTap: () => setState(() => _formule = '24h'),
           ),
           const SizedBox(height: 16),
 
           // Date debut
-          const Text('Date de debut',
+          const Text('Date de debut souhaitée',
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
           const SizedBox(height: 8),
           GestureDetector(
@@ -174,13 +173,25 @@ class _OzelSecuritesVigileScreenState
           const SizedBox(height: 16),
 
           // Adresse
-          const Text('Adresse a securiser',
+          const Text('Adresse à sécuriser',
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
           const SizedBox(height: 8),
           OzelTextField(
             controller: _adresse,
             label: 'Ex: Akpakpa, Cotonou',
             prefixIcon: Icons.place_rounded,
+          ),
+          const SizedBox(height: 16),
+
+          // WhatsApp
+          const Text('WhatsApp *',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+          const SizedBox(height: 8),
+          OzelTextField(
+            controller: _whatsapp,
+            label: '+229 XX XX XX XX',
+            prefixIcon: Icons.chat_rounded,
+            keyboardType: TextInputType.phone,
           ),
           const SizedBox(height: 16),
 
@@ -212,51 +223,37 @@ class _OzelSecuritesVigileScreenState
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
-          // Total
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: _color.withValues(alpha: 0.06),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: _color.withValues(alpha: 0.2)),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(_formule24h ? '24h/24' : '12h/nuit',
-                        style: const TextStyle(
-                            color: AppColors.textSecondary)),
-                    Text(Formatters.fcfa(_tarifMensuel) + '/mois'),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Total 3 mois',
-                        style: TextStyle(fontWeight: FontWeight.w800)),
-                    Text(
-                      Formatters.fcfa(_totalContrat),
-                      style: TextStyle(
-                          color: _color,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 18),
-                    ),
-                  ],
-                ),
-              ],
+          // Notes
+          const Text('Notes / précisions',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _notes,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              hintText: 'Dites-nous en plus sur vos besoins...',
+              border: OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
 
-          OzelPrimaryButton(
-            label: _loading ? 'Envoi...' : 'Demander un contrat',
-            enabled: !_loading,
-            onPressed: _demanderContrat,
+          // Bouton
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: FilledButton.icon(
+              onPressed: _loading ? null : _demanderDevis,
+              style: FilledButton.styleFrom(
+                backgroundColor: _color,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+              ),
+              icon: const Icon(Icons.send_rounded),
+              label: Text(_loading ? 'Envoi...' : 'Demander un devis',
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+            ),
           ),
         ],
       ),

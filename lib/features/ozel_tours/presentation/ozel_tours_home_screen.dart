@@ -27,10 +27,10 @@ class _OzelToursHomeScreenState extends ConsumerState<OzelToursHomeScreen>
   @override
   void initState() {
     super.initState();
-    _tabCtrl = TabController(length: 4, vsync: this);
+    _tabCtrl = TabController(length: 5, vsync: this);
     _carouselTimer = Timer.periodic(const Duration(seconds: 3), (_) {
       if (!mounted) return;
-      final next = (_carouselIndex + 1) % 4;
+      final next = (_carouselIndex + 1) % 5;
       _carouselCtrl.animateToPage(next,
           duration: const Duration(milliseconds: 400),
           curve: Curves.easeInOut);
@@ -108,6 +108,7 @@ class _OzelToursHomeScreenState extends ConsumerState<OzelToursHomeScreen>
               unselectedLabelColor: Colors.white60,
               tabs: const [
                 Tab(text: 'Circuits'),
+                Tab(text: 'Guest Houses'),
                 Tab(text: 'Hotels'),
                 Tab(text: 'Guides'),
                 Tab(text: 'Voitures'),
@@ -120,6 +121,11 @@ class _OzelToursHomeScreenState extends ConsumerState<OzelToursHomeScreen>
           children: [
             // Onglet Circuits
             _CircuitsTab(circuits: circuits, color: _color),
+            // Onglet Guest Houses
+            _ComingSoonTab(
+                icon: Icons.home_work_rounded,
+                label: 'Guest Houses',
+                color: _color),
             // Onglet Hotels (mock)
             _ComingSoonTab(
                 icon: Icons.hotel_rounded,
@@ -192,6 +198,59 @@ class _CircuitsTab extends StatelessWidget {
                 color: AppColors.black)),
         const SizedBox(height: 12),
         ...circuits.map((c) => _CircuitCard(circuit: c, color: color)),
+
+        const SizedBox(height: 24),
+
+        // ── Tourisme local ─────────────────────────────────────────────────
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color.withValues(alpha: 0.2)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.explore_rounded, color: color, size: 24),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'Tourisme local',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Découvrez les trésors cachés du Bénin avec nos guides locaux. Visites personnalisées, ateliers artisanaux, et expériences culturelles authentiques.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () => context.push('/ozel-tours/tourisme'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: color,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  icon: const Icon(Icons.hiking_rounded),
+                  label: const Text('S\'inscrire au tourisme local',
+                      style: TextStyle(fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -328,15 +387,21 @@ class _CircuitCard extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(Formatters.fcfa(circuit.prix),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Sur devis',
                           style: TextStyle(
                               color: color,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 15)),
-                      const Text('/personne',
-                          style: TextStyle(
-                              fontSize: 10,
-                              color: AppColors.textSecondary)),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 11),
+                        ),
+                      ),
                     ],
                   ),
                 ],

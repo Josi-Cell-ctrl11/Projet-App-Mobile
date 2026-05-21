@@ -81,7 +81,7 @@ class OzelSecuritesHomeScreen extends StatelessWidget {
                   _ServiceCard(
                     emoji: '🌿',
                     title: 'Jardinage & Espaces verts',
-                    desc: 'Abonnement 25 000 FCFA/mois (4 passages)\nOne-shot 8 000 FCFA',
+                    desc: 'Sur devis selon vos besoins',
                     color: const Color(0xFF2E7D32),
                     onTap: () =>
                         context.push('/ozel-securites/jardinage'),
@@ -92,7 +92,7 @@ class OzelSecuritesHomeScreen extends StatelessWidget {
                   _ServiceCard(
                     emoji: '🛡️',
                     title: 'Securite privee (Vigile)',
-                    desc: '12h/nuit : 90 000 FCFA/mois\n24h/24 : 150 000 FCFA/mois',
+                    desc: 'Sur devis selon vos besoins',
                     color: _color,
                     onTap: () =>
                         context.push('/ozel-securites/vigile'),
@@ -103,10 +103,32 @@ class OzelSecuritesHomeScreen extends StatelessWidget {
                   _ServiceCard(
                     emoji: '🚨',
                     title: 'Intervention d\'urgence',
-                    desc: 'Intervention <1h — 15 000 FCFA\nFausse alerte facturee',
+                    desc: 'Sur devis selon vos besoins',
                     color: Colors.red,
                     onTap: () =>
                         context.push('/ozel-securites/urgence'),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Entretien Appartement
+                  _ServiceCard(
+                    emoji: '🧹',
+                    title: 'Entretien Appartement',
+                    desc: 'Sur devis selon vos besoins',
+                    color: Colors.blue,
+                    onTap: () =>
+                        context.push('/ozel-securites/entretien'),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Nounou
+                  _ServiceCard(
+                    emoji: '👶',
+                    title: 'Nounou / Garde d\'enfants',
+                    desc: 'Sur devis selon vos besoins',
+                    color: Colors.pink,
+                    onTap: () =>
+                        context.push('/ozel-securites/nounou'),
                   ),
 
                   const SizedBox(height: 24),

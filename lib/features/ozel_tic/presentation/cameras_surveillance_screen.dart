@@ -4,41 +4,25 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/ozel_text_field.dart';
 
-/// Ecran demande de devis Jardinage Ozel Securites.
-class OzelSecuritesJardinageScreen extends ConsumerStatefulWidget {
-  const OzelSecuritesJardinageScreen({super.key});
+/// Ecran demande de devis Caméras de surveillance OzelTic.
+class CamerasSurveillanceScreen extends ConsumerStatefulWidget {
+  const CamerasSurveillanceScreen({super.key});
 
   @override
-  ConsumerState<OzelSecuritesJardinageScreen> createState() =>
-      _OzelSecuritesJardinageScreenState();
+  ConsumerState<CamerasSurveillanceScreen> createState() =>
+      _CamerasSurveillanceScreenState();
 }
 
-class _OzelSecuritesJardinageScreenState
-    extends ConsumerState<OzelSecuritesJardinageScreen> {
-  static const Color _color = Color(0xFF2E7D32);
+class _CamerasSurveillanceScreenState
+    extends ConsumerState<CamerasSurveillanceScreen> {
+  static const Color _color = Color(0xFF1565C0);
   
   final _adresse = TextEditingController();
   final _whatsapp = TextEditingController();
   final _notes = TextEditingController();
-  String _typePrestation = 'abonnement';
-  DateTime? _dateSouhaitee;
-  String _superficie = '<100m²';
+  String _typeInstallation = 'domicile';
+  String _nbCameras = '1-2';
   bool _loading = false;
-
-  Future<void> _pickDate() async {
-    final d = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().add(const Duration(days: 3)),
-      firstDate: DateTime.now().add(const Duration(days: 1)),
-      lastDate: DateTime.now().add(const Duration(days: 60)),
-      builder: (ctx, child) => Theme(
-        data: Theme.of(ctx)
-            .copyWith(colorScheme: const ColorScheme.light(primary: _color)),
-        child: child!,
-      ),
-    );
-    if (d != null) setState(() => _dateSouhaitee = d);
-  }
 
   Future<void> _demanderDevis() async {
     if (_adresse.text.trim().isEmpty || _whatsapp.text.trim().isEmpty) {
@@ -86,7 +70,7 @@ class _OzelSecuritesJardinageScreenState
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
-              context.go('/ozel-securites');
+              context.go('/ozel-tic');
             },
             child: const Text('OK'),
           ),
@@ -110,74 +94,74 @@ class _OzelSecuritesJardinageScreenState
       appBar: AppBar(
         backgroundColor: _color,
         foregroundColor: AppColors.white,
-        title: const Text('Jardinage & Espaces verts',
+        title: const Text('Caméras de surveillance',
             style: TextStyle(fontWeight: FontWeight.w800)),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Type de prestation
-          const Text('Type de prestation',
+          // Type d'installation
+          const Text('Type d\'installation',
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
           const SizedBox(height: 10),
           _RadioOption(
-            label: 'Abonnement mensuel',
-            subtitle: '4 passages par mois',
-            selected: _typePrestation == 'abonnement',
+            label: 'Domicile',
+            subtitle: 'Maison, appartement',
+            selected: _typeInstallation == 'domicile',
             color: _color,
-            onTap: () => setState(() => _typePrestation = 'abonnement'),
+            onTap: () => setState(() => _typeInstallation = 'domicile'),
           ),
           const SizedBox(height: 8),
           _RadioOption(
-            label: 'Prestation one-shot',
-            subtitle: 'Passage unique',
-            selected: _typePrestation == 'oneshot',
+            label: 'Commerce',
+            subtitle: 'Boutique, bureau',
+            selected: _typeInstallation == 'commerce',
             color: _color,
-            onTap: () => setState(() => _typePrestation = 'oneshot'),
+            onTap: () => setState(() => _typeInstallation = 'commerce'),
+          ),
+          const SizedBox(height: 8),
+          _RadioOption(
+            label: 'Entrepôt',
+            subtitle: 'Stock, entrepôt',
+            selected: _typeInstallation == 'entrepot',
+            color: _color,
+            onTap: () => setState(() => _typeInstallation = 'entrepot'),
           ),
           const SizedBox(height: 16),
 
-          // Date souhaitée
-          const Text('Date souhaitée',
+          // Nombre de caméras
+          const Text('Nombre de caméras estimé',
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
           const SizedBox(height: 8),
-          GestureDetector(
-            onTap: _pickDate,
-            child: Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.calendar_today_rounded,
-                      color: Color(0xFF2E7D32), size: 20),
-                  const SizedBox(width: 12),
-                  Text(
-                    _dateSouhaitee == null
-                        ? 'Choisir une date'
-                        : '${_dateSouhaitee!.day}/${_dateSouhaitee!.month}/${_dateSouhaitee!.year}',
-                    style: TextStyle(
-                      color: _dateSouhaitee == null
-                          ? AppColors.textSecondary
-                          : AppColors.black,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _nbCameras,
+                isExpanded: true,
+                items: const [
+                  DropdownMenuItem(value: '1-2', child: Text('1-2 caméras')),
+                  DropdownMenuItem(value: '3-4', child: Text('3-4 caméras')),
+                  DropdownMenuItem(value: '5-8', child: Text('5-8 caméras')),
+                  DropdownMenuItem(value: '9+', child: Text('9+ caméras')),
                 ],
+                onChanged: (v) => setState(() => _nbCameras = v!),
               ),
             ),
           ),
           const SizedBox(height: 16),
 
           // Adresse
-          const Text('Adresse du jardin',
+          const Text('Adresse',
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
           const SizedBox(height: 8),
           OzelTextField(
             controller: _adresse,
-            label: 'Ex: Haie Vive, Cotonou',
+            label: 'Ex: Cadjèhoun, Cotonou',
             prefixIcon: Icons.place_rounded,
           ),
           const SizedBox(height: 16),
@@ -191,34 +175,6 @@ class _OzelSecuritesJardinageScreenState
             label: '+229 XX XX XX XX',
             prefixIcon: Icons.chat_rounded,
             keyboardType: TextInputType.phone,
-          ),
-          const SizedBox(height: 16),
-
-          // Superficie
-          const Text('Superficie estimée',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-          const SizedBox(height: 8),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: _superficie,
-                isExpanded: true,
-                items: const [
-                  DropdownMenuItem(
-                      value: '<100m²', child: Text('Moins de 100 m²')),
-                  DropdownMenuItem(
-                      value: '100-300m²', child: Text('100 à 300 m²')),
-                  DropdownMenuItem(
-                      value: '>300m²', child: Text('Plus de 300 m²')),
-                ],
-                onChanged: (v) => setState(() => _superficie = v!),
-              ),
-            ),
           ),
           const SizedBox(height: 16),
 
@@ -281,12 +237,16 @@ class _RadioOption extends StatelessWidget {
           color: selected ? color.withValues(alpha: 0.06) : AppColors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-              color: selected ? color.withValues(alpha: 0.4) : AppColors.disabled),
+              color: selected
+                  ? color.withValues(alpha: 0.4)
+                  : AppColors.disabled),
         ),
         child: Row(
           children: [
             Icon(
-              selected ? Icons.radio_button_checked : Icons.radio_button_off,
+              selected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_off,
               color: selected ? color : AppColors.textSecondary,
             ),
             const SizedBox(width: 12),
