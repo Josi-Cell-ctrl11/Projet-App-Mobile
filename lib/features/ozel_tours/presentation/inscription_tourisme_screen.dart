@@ -100,6 +100,10 @@ class _InscriptionTourismeScreenState
         appBar: AppBar(
           backgroundColor: _color,
           foregroundColor: AppColors.white,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            onPressed: () => context.go('/ozel-tours'),
+          ),
           title: const Text(
             'Inscription Tourisme',
             style: TextStyle(fontWeight: FontWeight.w800),

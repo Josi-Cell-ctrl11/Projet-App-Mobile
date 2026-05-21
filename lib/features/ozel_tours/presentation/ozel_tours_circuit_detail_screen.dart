@@ -22,6 +22,10 @@ class OzelToursCircuitDetailScreen extends StatelessWidget {
             pinned: true,
             backgroundColor: _color,
             foregroundColor: AppColors.white,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded),
+              onPressed: () => Navigator.pop(context),
+            ),
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: const BoxDecoration(

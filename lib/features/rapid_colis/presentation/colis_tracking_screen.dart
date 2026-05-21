@@ -5,6 +5,11 @@ import "../../../core/theme/app_colors.dart";
 import "../../../core/utils/formatters.dart";
 import "../application/active_colis_notifier.dart";
 
+const Color _orange = Color(0xFFFF6B35);
+const Color _lightGray = Color(0xFFF8F8F8);
+const Color _darkGray = Color(0xFF333333);
+const Color _lightOrange = Color(0xFFFFE5DB);
+
 /// Suivi livraison GPS — carte mockee (google_maps desactive en attendant cle API).
 class ColisTrackingScreen extends ConsumerWidget {
   const ColisTrackingScreen({super.key});
@@ -20,14 +25,18 @@ class ColisTrackingScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: _lightGray,
       appBar: AppBar(
-        backgroundColor: AppColors.white,
+        backgroundColor: Colors.white,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: _darkGray),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: const Text(
           "Suivi livraison",
-          style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.black),
+          style: TextStyle(fontWeight: FontWeight.w800, color: Colors.black),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -41,232 +50,220 @@ class ColisTrackingScreen extends ConsumerWidget {
                 ),
               );
         },
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.white,
+        backgroundColor: _orange,
+        foregroundColor: Colors.white,
         icon: const Icon(Icons.navigation_rounded),
         label: const Text("Simuler mouvement"),
       ),
       body: Column(
         children: [
-          // ── Carte mockee ───────────────────────────────────────────────────
+          // ── Carte placeholder ───────────────────────────────────────────────
           Expanded(
             child: Container(
-              color: const Color(0xFFE8F0FE),
-              child: Stack(
-                children: [
-                  // Fond grille mock
-                  CustomPaint(
-                    painter: _GridPainter(),
-                    child: const SizedBox.expand(),
-                  ),
-                  // Centre : icone livreur
-                  Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primary.withValues(alpha: 0.4),
-                                blurRadius: 20,
-                                spreadRadius: 4,
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.delivery_dining_rounded,
-                            color: AppColors.white,
-                            size: 36,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: AppColors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
-                                blurRadius: 8,
-                              ),
-                            ],
-                          ),
-                          child: const Text(
-                            "Livreur en route",
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Badge GPS mock
-                  Positioned(
-                    top: 16,
-                    right: 16,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 8,
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                              color: AppColors.success,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          const Text(
-                            "GPS actif",
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.success,
-                            ),
-                          ),
-                        ],
+              color: Colors.grey.shade200,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.location_on_rounded,
+                        size: 64, color: Colors.grey.shade400),
+                    SizedBox(height: 16),
+                    Text(
+                      "Carte Google Maps",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade600,
                       ),
                     ),
-                  ),
-                  // Note carte mock
-                  Positioned(
-                    bottom: 16,
-                    left: 16,
-                    right: 16,
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppColors.black.withValues(alpha: 0.7),
-                        borderRadius: BorderRadius.circular(10),
+                    SizedBox(height: 8),
+                    Text(
+                      "Configuration API requise",
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade500,
                       ),
-                      child: const Text(
-                        "Carte GPS disponible apres configuration de la cle Google Maps",
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // ── Timeline ─────────────────────────────────────────────────────────
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Statut de livraison",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _TimelineStep(
+                  icon: Icons.inventory_2_rounded,
+                  label: "Colis pris en charge",
+                  completed: true,
+                ),
+                _TimelineStep(
+                  icon: Icons.motorcycle_rounded,
+                  label: "Livreur assigné",
+                  completed: true,
+                ),
+                _TimelineStep(
+                  icon: Icons.directions_car_rounded,
+                  label: "En route",
+                  completed: true,
+                  active: true,
+                ),
+                _TimelineStep(
+                  icon: Icons.check_circle_rounded,
+                  label: "Livré",
+                  completed: false,
+                ),
+              ],
+            ),
+          ),
+
+          // ── Info livreur ─────────────────────────────────────────────────────
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.person_rounded,
+                      color: Colors.grey, size: 24),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Kofi Mensah",
                         style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 11,
-                          textBaseline: TextBaseline.alphabetic,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: Colors.black,
                         ),
-                        textAlign: TextAlign.center,
                       ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.phone_rounded,
+                              size: 14, color: _darkGray),
+                          const SizedBox(width: 4),
+                          Text(
+                            "+229 97 00 00 00",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _lightOrange,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    "4.8 ★",
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: _orange,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // ── Info destinataire ───────────────────────────────────────────────
+          if (shipment.destinatairePrenom.isNotEmpty ||
+              shipment.destinataireNom.isNotEmpty)
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              child: Row(
+                children: [
+                  const Icon(Icons.person_outline_rounded,
+                      size: 18, color: _darkGray),
+                  const SizedBox(width: 8),
+                  Text(
+                    "Destinataire: ${shipment.destinatairePrenom} ${shipment.destinataireNom}",
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Colors.black,
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-
-          // ── Infos livraison ────────────────────────────────────────────────
-          Container(
-            width: double.infinity,
-            color: AppColors.white,
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.flag_rounded,
-                        color: AppColors.success, size: 16),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        shipment.pointA,
-                        style: const TextStyle(fontSize: 13),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.place_rounded,
-                        color: AppColors.primary, size: 16),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        shipment.pointB,
-                        style: const TextStyle(fontSize: 13),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Montant : ${Formatters.fcfa(shipment.priceFcfa)}",
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.warning.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        "En cours",
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.warning,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
   }
 }
 
-class _GridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFFD0E4FF)
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke;
-    for (double x = 0; x < size.width; x += 40) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
-    }
-    for (double y = 0; y < size.height; y += 40) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
-    }
-  }
+class _TimelineStep extends StatelessWidget {
+  const _TimelineStep({
+    required this.icon,
+    required this.label,
+    required this.completed,
+    this.active = false,
+  });
+  final IconData icon;
+  final String label;
+  final bool completed;
+  final bool active;
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  Widget build(BuildContext context) {
+    final color = active ? _orange : (completed ? _darkGray : Colors.grey.shade300);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: Colors.white, size: 16),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: active ? FontWeight.w700 : FontWeight.w400,
+              fontSize: 13,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

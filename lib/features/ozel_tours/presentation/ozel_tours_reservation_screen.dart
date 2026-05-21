@@ -87,6 +87,10 @@ class _OzelToursReservationScreenState
       appBar: AppBar(
         backgroundColor: _color,
         foregroundColor: AppColors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text('Reserver — ${c.destination}',
             style: const TextStyle(fontWeight: FontWeight.w800)),
       ),

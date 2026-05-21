@@ -52,7 +52,7 @@ class _RechargeMomoScreenState extends ConsumerState<RechargeMomoScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(res.message)),
     );
-    context.pop();
+    Navigator.pop(context);
   }
 
   @override

@@ -8,6 +8,10 @@ import "../../../core/utils/rapid_colis_pricing.dart";
 import "../../../shared/widgets/ozel_button.dart";
 import "../application/colis_draft_notifier.dart";
 
+const Color _orange = Color(0xFFFF6B35);
+const Color _lightGray = Color(0xFFF8F8F8);
+const Color _darkGray = Color(0xFF333333);
+
 /// Devis instantané Rapid Colis — prix affiché en gros #FF6B35.
 class ColisQuoteScreen extends ConsumerWidget {
   const ColisQuoteScreen({super.key});
@@ -22,14 +26,18 @@ class ColisQuoteScreen extends ConsumerWidget {
     );
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: _lightGray,
       appBar: AppBar(
-        backgroundColor: AppColors.white,
+        backgroundColor: Colors.white,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: _darkGray),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: const Text(
-          "Devis colis",
-          style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.black),
+          "Estimation du tarif",
+          style: TextStyle(fontWeight: FontWeight.w800, color: Colors.black),
         ),
       ),
       body: Padding(
@@ -40,52 +48,37 @@ class ColisQuoteScreen extends ConsumerWidget {
             // ── Prix hero ──────────────────────────────────────────────────────
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(20),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.15),
-                    blurRadius: 20,
-                    offset: const Offset(0, 6),
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
               child: Column(
                 children: [
+                  Text(
+                    Formatters.fcfa(price),
+                    style: const TextStyle(
+                      fontSize: 40,
+                      fontWeight: FontWeight.w900,
+                      color: _orange,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
                   const Text(
-                    "Montant estimé",
+                    "Tarif estimé selon la distance",
                     style: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 13,
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    Formatters.fcfa(price),
-                    style: const TextStyle(
-                      fontSize: 42,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.warning.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      "Prix final apres pesee par le livreur",
-                      style: TextStyle(
-                        color: AppColors.warning,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
@@ -93,15 +86,15 @@ class ColisQuoteScreen extends ConsumerWidget {
 
             const SizedBox(height: 20),
 
-            // ── Détails trajet ─────────────────────────────────────────────────
+            // ── Détail calcul ─────────────────────────────────────────────────
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(16),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
+                    color: Colors.black.withValues(alpha: 0.08),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -110,96 +103,140 @@ class ColisQuoteScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   _DetailRow(
-                    icon: Icons.flag_rounded,
-                    iconColor: AppColors.success,
-                    label: "Point A",
-                    value: draft.pointA,
-                  ),
-                  const _Divider(),
-                  _DetailRow(
-                    icon: Icons.place_rounded,
-                    iconColor: AppColors.primary,
-                    label: "Point B",
-                    value: draft.pointB,
-                  ),
-                  const _Divider(),
-                  _DetailRow(
-                    icon: Icons.scale_rounded,
-                    iconColor: AppColors.textSecondary,
-                    label: "Poids",
-                    value: "Mesure par le livreur",
-                  ),
-                  const _Divider(),
-                  _DetailRow(
-                    icon: Icons.route_rounded,
-                    iconColor: const Color(0xFF1565C0),
-                    label: "Distance",
+                    label: "Distance estimée",
                     value: "${draft.distanceKm.toStringAsFixed(1)} km",
+                  ),
+                  const _Divider(),
+                  _DetailRow(
+                    label: "Base",
+                    value: "1 000 FCFA",
+                  ),
+                  const _Divider(),
+                  _DetailRow(
+                    label: "Supplément distance",
+                    value: "${Formatters.fcfa(price - 1000)}",
+                  ),
+                  const _Divider(),
+                  _DetailRow(
+                    label: "Total",
+                    value: Formatters.fcfa(price),
+                    isTotal: true,
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
 
-            // ── Délai estimé ───────────────────────────────────────────────────
-            Row(
-              children: [
-                Expanded(
-                  child: _InfoChip(
-                    icon: Icons.schedule_rounded,
-                    label: "Délai Cotonou",
-                    value: "~60 min",
-                    color: const Color(0xFF1565C0),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _InfoChip(
-                    icon: Icons.flash_on_rounded,
-                    label: "Express",
-                    value: "~30 min (x2)",
-                    color: AppColors.primary,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            // Note mock
+            // ── Récap trajet ─────────────────────────────────────────────────
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.warning.withValues(alpha: 0.08),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                    color: AppColors.warning.withValues(alpha: 0.3)),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.info_outline_rounded,
-                      color: AppColors.warning, size: 16),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      "Prix indicatif (mock). La facturation finale sera confirmée côté backend.",
-                      style: TextStyle(
-                        color: AppColors.warning,
-                        fontSize: 11,
-                        height: 1.4,
-                      ),
-                    ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: const BoxDecoration(
+                          color: _orange,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          draft.pointA,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: _darkGray,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          draft.pointB,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (draft.destinatairePrenom.isNotEmpty || draft.destinataireNom.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(Icons.person_rounded,
+                            size: 16, color: _darkGray),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            "${draft.destinatairePrenom} ${draft.destinataireNom}",
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: AppColors.textSecondary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
 
             const Spacer(),
 
-            OzelPrimaryButton(
-              label: "Continuer vers le paiement",
-              onPressed: () => context.push("/rapid-colis/confirmation"),
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: FilledButton(
+                onPressed: () => context.push("/rapid-colis/confirmation"),
+                style: FilledButton.styleFrom(
+                  backgroundColor: _orange,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text(
+                  "Confirmer et commander",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: 8),
           ],
@@ -211,43 +248,35 @@ class ColisQuoteScreen extends ConsumerWidget {
 
 class _DetailRow extends StatelessWidget {
   const _DetailRow({
-    required this.icon,
-    required this.iconColor,
     required this.label,
     required this.value,
+    this.isTotal = false,
   });
-  final IconData icon;
-  final Color iconColor;
   final String label;
   final String value;
+  final bool isTotal;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: iconColor),
-          const SizedBox(width: 12),
-          SizedBox(
-            width: 80,
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 13,
-              ),
+          Text(
+            label,
+            style: TextStyle(
+              color: isTotal ? _orange : AppColors.textSecondary,
+              fontSize: 13,
+              fontWeight: isTotal ? FontWeight.w700 : FontWeight.w400,
             ),
           ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
-                color: AppColors.black,
-              ),
-              overflow: TextOverflow.ellipsis,
+          const Spacer(),
+          Text(
+            value,
+            style: TextStyle(
+              color: isTotal ? _orange : Colors.black,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -260,61 +289,9 @@ class _Divider extends StatelessWidget {
   const _Divider();
 
   @override
-  Widget build(BuildContext context) {
-    return const Divider(height: 1, color: AppColors.surface);
-  }
+  Widget build(BuildContext context) => const Divider(
+        height: 1,
+        color: AppColors.surface,
+      );
 }
 
-class _InfoChip extends StatelessWidget {
-  const _InfoChip({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  value,
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

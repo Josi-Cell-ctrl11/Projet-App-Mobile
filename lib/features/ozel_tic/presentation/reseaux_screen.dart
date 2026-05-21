@@ -92,6 +92,10 @@ class _ReseauxScreenState extends ConsumerState<ReseauxScreen> {
       appBar: AppBar(
         backgroundColor: _color,
         foregroundColor: AppColors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: const Text('Réseaux & Connexions',
             style: TextStyle(fontWeight: FontWeight.w800)),
       ),

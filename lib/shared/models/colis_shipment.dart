@@ -11,8 +11,9 @@ class ColisShipment {
     required this.priceFcfa,
     this.photoPath,
     this.payeur = PayeurColis.expediteur,
-    this.nomDestinataire = "",
-    this.telephoneDestinataire = "",
+    this.destinatairePrenom = "",
+    this.destinataireNom = "",
+    this.destinataireTelephone = "",
     this.mode = ModeColis.colis,
     this.driverLat,
     this.driverLng,
@@ -32,8 +33,9 @@ class ColisShipment {
   /// Qui paie les frais de livraison.
   final PayeurColis payeur;
 
-  final String nomDestinataire;
-  final String telephoneDestinataire;
+  final String destinatairePrenom;
+  final String destinataireNom;
+  final String destinataireTelephone;
 
   /// Mode : colis standard ou coursier universel.
   final ModeColis mode;
@@ -57,8 +59,9 @@ class ColisShipment {
         priceFcfa: priceFcfa ?? this.priceFcfa,
         photoPath: photoPath,
         payeur: payeur,
-        nomDestinataire: nomDestinataire,
-        telephoneDestinataire: telephoneDestinataire,
+        destinatairePrenom: destinatairePrenom,
+        destinataireNom: destinataireNom,
+        destinataireTelephone: destinataireTelephone,
         mode: mode,
         driverLat: driverLat ?? this.driverLat,
         driverLng: driverLng ?? this.driverLng,

@@ -11,8 +11,9 @@ class ColisDraft {
   const ColisDraft({
     this.pointA = "",
     this.pointB = "",
-    this.nomDestinataire = "",
-    this.telephoneDestinataire = "",
+    this.destinatairePrenom = "",
+    this.destinataireNom = "",
+    this.destinataireTelephone = "",
     // Le poids n'est plus saisi par le client — il sera mesure par le livreur.
     // On garde distanceKm pour le calcul de devis.
     this.distanceKm = 2,
@@ -24,8 +25,9 @@ class ColisDraft {
 
   final String pointA;
   final String pointB;
-  final String nomDestinataire;
-  final String telephoneDestinataire;
+  final String destinatairePrenom;
+  final String destinataireNom;
+  final String destinataireTelephone;
 
   /// Distance estimee en km (saisie par le client, confirmee par le livreur).
   final double distanceKm;
@@ -44,8 +46,9 @@ class ColisDraft {
   ColisDraft copyWith({
     String? pointA,
     String? pointB,
-    String? nomDestinataire,
-    String? telephoneDestinataire,
+    String? destinatairePrenom,
+    String? destinataireNom,
+    String? destinataireTelephone,
     double? distanceKm,
     String? photoPath,
     bool clearPhoto = false,
@@ -56,9 +59,10 @@ class ColisDraft {
       ColisDraft(
         pointA: pointA ?? this.pointA,
         pointB: pointB ?? this.pointB,
-        nomDestinataire: nomDestinataire ?? this.nomDestinataire,
-        telephoneDestinataire:
-            telephoneDestinataire ?? this.telephoneDestinataire,
+        destinatairePrenom: destinatairePrenom ?? this.destinatairePrenom,
+        destinataireNom: destinataireNom ?? this.destinataireNom,
+        destinataireTelephone:
+            destinataireTelephone ?? this.destinataireTelephone,
         distanceKm: distanceKm ?? this.distanceKm,
         photoPath: clearPhoto ? null : (photoPath ?? this.photoPath),
         payeur: payeur ?? this.payeur,
@@ -73,10 +77,12 @@ class ColisDraftNotifier extends Notifier<ColisDraft> {
 
   void setPointA(String v) => state = state.copyWith(pointA: v);
   void setPointB(String v) => state = state.copyWith(pointB: v);
-  void setNomDestinataire(String v) =>
-      state = state.copyWith(nomDestinataire: v);
-  void setTelephoneDestinataire(String v) =>
-      state = state.copyWith(telephoneDestinataire: v);
+  void setDestinatairePrenom(String v) =>
+      state = state.copyWith(destinatairePrenom: v);
+  void setDestinataireNom(String v) =>
+      state = state.copyWith(destinataireNom: v);
+  void setDestinataireTelephone(String v) =>
+      state = state.copyWith(destinataireTelephone: v);
   void setDistance(double km) => state = state.copyWith(distanceKm: km);
   void setPhoto(String? path) =>
       state = state.copyWith(photoPath: path, clearPhoto: path == null);

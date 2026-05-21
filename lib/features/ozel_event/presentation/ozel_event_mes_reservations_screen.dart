@@ -19,6 +19,10 @@ class OzelEventMesReservationsScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: _color,
         foregroundColor: AppColors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          onPressed: () => Navigator.pop(context),
+        ),
         elevation: 0,
         title: const Text(
           "Mes demandes",
