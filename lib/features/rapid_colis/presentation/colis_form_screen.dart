@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
@@ -9,12 +11,11 @@ import "../../../core/utils/formatters.dart";
 import "../../../core/utils/rapid_colis_pricing.dart";
 import "../../../shared/widgets/ozel_button.dart";
 import "../../../shared/widgets/ozel_text_field.dart";
+import "../../../shared/widgets/section_card.dart";
+import "../../../shared/widgets/selection_card.dart";
 import "../application/colis_draft_notifier.dart";
-
-const Color _orange = Color(0xFFFF6B35);
-const Color _lightGray = Color(0xFFF8F8F8);
-const Color _darkGray = Color(0xFF333333);
-const Color _lightOrange = Color(0xFFFFF3EE);
+import "../utils/colis_form_validator.dart";
+import "../utils/phone_formatter.dart";
 
 /// Formulaire Rapid Colis — logique rapport client Mai 2026 :
 /// - Pas de saisie de poids (sera pese par le livreur sur place)
@@ -35,6 +36,7 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
   final _destNom = TextEditingController();
   final _destTel = TextEditingController();
   final _descCoursier = TextEditingController();
+  Timer? _debounceTimer;
 
   @override
   void initState() {
@@ -59,18 +61,33 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
     _destNom.dispose();
     _destTel.dispose();
     _descCoursier.dispose();
+    _debounceTimer?.cancel();
     super.dispose();
   }
 
   Future<void> _pickPhoto() async {
-    final picker = ImagePicker();
-    final file = await picker.pickImage(source: ImageSource.gallery);
-    if (file == null) return;
-    ref.read(colisDraftProvider.notifier).setPhoto(file.path);
-    setState(() {});
+    try {
+      final picker = ImagePicker();
+      final file = await picker.pickImage(source: ImageSource.gallery);
+      if (file == null) return;
+      ref.read(colisDraftProvider.notifier).setPhoto(file.path);
+      setState(() {});
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Erreur lors de la sélection de l'image: $e"),
+            backgroundColor: AppColors.black,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    }
   }
 
-  void _next() {
+  void _saveDraft() {
     final notifier = ref.read(colisDraftProvider.notifier);
     notifier.setPointA(_a.text.trim());
     notifier.setPointB(_b.text.trim());
@@ -78,11 +95,28 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
     notifier.setDestinataireNom(_destNom.text.trim());
     notifier.setDestinataireTelephone(_destTel.text.trim());
     notifier.setDescriptionCoursier(_descCoursier.text.trim());
+  }
 
-    if (_a.text.trim().isEmpty || _b.text.trim().isEmpty) {
+  void _onFieldChanged() {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 500), _saveDraft);
+  }
+
+  void _next() {
+    _saveDraft();
+
+    final errors = ColisFormValidator.validateAll(
+      pointA: _a.text,
+      pointB: _b.text,
+      destinatairePrenom: _destPrenom.text,
+      destinataireNom: _destNom.text,
+      destinataireTelephone: _destTel.text,
+    );
+
+    if (errors['addresses'] != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text("Renseignez les points A et B."),
+          content: Text(errors['addresses']!),
           backgroundColor: AppColors.black,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -91,10 +125,10 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
       );
       return;
     }
-    if (_destPrenom.text.trim().length < 2 || _destNom.text.trim().length < 2) {
+    if (errors['recipientName'] != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text("Le prénom et le nom doivent contenir au moins 2 caractères."),
+          content: Text(errors['recipientName']!),
           backgroundColor: AppColors.black,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -103,10 +137,10 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
       );
       return;
     }
-    if (!_destTel.text.trim().startsWith('+229')) {
+    if (errors['recipientPhone'] != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text("Le téléphone doit commencer par +229."),
+          content: Text(errors['recipientPhone']!),
           backgroundColor: AppColors.black,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -128,13 +162,13 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
     );
 
     return Scaffold(
-      backgroundColor: _lightGray,
+      backgroundColor: AppColors.surface,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: _darkGray),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF333333)),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
@@ -147,7 +181,7 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           // ── Trajet ────────────────────────────────────────────────────────
-          _SectionCard(
+          SectionCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -164,25 +198,27 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
                   controller: _a,
                   label: "Point A — Ramassage / Départ",
                   prefixIcon: Icons.flag_rounded,
+                  onChanged: (_) => _onFieldChanged(),
                 ),
                 const SizedBox(height: 12),
                 OzelTextField(
                   controller: _b,
                   label: "Point B — Livraison / Destination",
                   prefixIcon: Icons.place_rounded,
+                  onChanged: (_) => _onFieldChanged(),
                 ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
                     const Icon(Icons.route_rounded,
-                        size: 16, color: _darkGray),
+                        size: 16, color: Color(0xFF333333)),
                     const SizedBox(width: 6),
                     const Text(
                       "Distance estimée",
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 12,
-                        color: _darkGray,
+                        color: Color(0xFF333333),
                       ),
                     ),
                     const Spacer(),
@@ -211,7 +247,7 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
                   min: 0.5,
                   max: 25,
                   divisions: 49,
-                  activeColor: _orange,
+                  activeColor: AppColors.primary,
                   inactiveColor: Colors.grey.shade300,
                   label: "${draft.distanceKm.toStringAsFixed(1)} km",
                   onChanged: (v) =>
@@ -224,14 +260,14 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
           const SizedBox(height: 16),
 
           // ── Destinataire ───────────────────────────────────────────────────
-          _SectionCard(
+          SectionCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
                     const Icon(Icons.person_outline_rounded,
-                        size: 18, color: _darkGray),
+                        size: 18, color: Color(0xFF333333)),
                     const SizedBox(width: 8),
                     const Text(
                       "Destinataire",
@@ -248,12 +284,14 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
                   controller: _destPrenom,
                   label: "Prénom du destinataire *",
                   prefixIcon: Icons.person_rounded,
+                  onChanged: (_) => _onFieldChanged(),
                 ),
                 const SizedBox(height: 12),
                 OzelTextField(
                   controller: _destNom,
                   label: "Nom du destinataire *",
                   prefixIcon: Icons.person_rounded,
+                  onChanged: (_) => _onFieldChanged(),
                 ),
                 const SizedBox(height: 12),
                 OzelTextField(
@@ -261,6 +299,8 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
                   label: "Numéro de téléphone du destinataire *",
                   prefixIcon: Icons.phone_rounded,
                   keyboardType: TextInputType.phone,
+                  inputFormatters: [BeninPhoneFormatter()],
+                  onChanged: (_) => _onFieldChanged(),
                 ),
               ],
             ),
@@ -269,7 +309,7 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
           const SizedBox(height: 16),
 
           // ── Qui paie ? ─────────────────────────────────────────────────────
-          _SectionCard(
+          SectionCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -285,7 +325,7 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: _PayeurCard(
+                      child: SelectionCard(
                         icon: Icons.credit_card_rounded,
                         label: "J'expédie et je paie",
                         selected: draft.payeur == PayeurColis.expediteur,
@@ -295,7 +335,7 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: _PayeurCard(
+                      child: SelectionCard(
                         icon: Icons.inventory_2_rounded,
                         label: "Le destinataire paie",
                         selected: draft.payeur == PayeurColis.destinataire,
@@ -315,20 +355,20 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: _lightOrange,
+              color: const Color(0xFFFFF3EE),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(Icons.warning_amber_rounded,
-                    color: _orange, size: 18),
+                    color: AppColors.primary, size: 18),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     "Le paiement doit être effectué avant la remise du colis.",
                     style: TextStyle(
-                      color: _orange,
+                      color: AppColors.primary,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                       height: 1.4,
@@ -348,7 +388,7 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
             child: FilledButton(
               onPressed: _next,
               style: FilledButton.styleFrom(
-                backgroundColor: _orange,
+                backgroundColor: AppColors.primary,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
               ),
@@ -368,73 +408,3 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
   }
 }
 
-// ─── Widgets helpers ──────────────────────────────────────────────────────────
-class _SectionCard extends StatelessWidget {
-  const _SectionCard({required this.child});
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: child,
-    );
-  }
-}
-
-class _PayeurCard extends StatelessWidget {
-  const _PayeurCard({
-    required this.icon,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: selected ? _lightOrange : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: selected ? _orange : Colors.grey.shade300,
-            width: selected ? 2 : 1,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: selected ? _orange : _darkGray, size: 24),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: selected ? _orange : Colors.black,
-                fontSize: 12,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
