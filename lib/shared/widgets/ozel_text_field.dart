@@ -13,6 +13,8 @@ class OzelTextField extends StatelessWidget {
     this.obscure = false,
     this.prefixIcon,
     this.maxLines = 1,
+    this.onChanged,
+    this.inputFormatters,
   });
 
   final TextEditingController controller;
@@ -22,6 +24,8 @@ class OzelTextField extends StatelessWidget {
   final bool obscure;
   final IconData? prefixIcon;
   final int maxLines;
+  final ValueChanged<String>? onChanged;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +34,8 @@ class OzelTextField extends StatelessWidget {
       keyboardType: keyboardType,
       obscureText: obscure,
       maxLines: obscure ? 1 : maxLines,
+      onChanged: onChanged,
+      inputFormatters: inputFormatters,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
