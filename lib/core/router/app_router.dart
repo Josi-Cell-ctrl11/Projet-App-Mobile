@@ -4,9 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 // Écrans Auth
+import '../../features/auth/domain/auth_provider.dart';
 import '../../features/auth/presentation/splash_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/otp_screen.dart';
+import '../../features/auth/presentation/inscription_screen.dart';
+import '../../features/notifications/notifications_screen.dart';
 
 // Écrans principaux
 import '../../features/dashboard/presentation/dashboard_screen.dart';
@@ -23,9 +26,46 @@ import '../../features/commandes/domain/commandes_provider.dart';
 
 /// Provider du routeur principal de l'application
 final appRouterProvider = Provider<GoRouter>((ref) {
+  // Clé de navigation racine
+  final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+
+  // Écouter les changements d'auth pour notifier GoRouter
+  final notifier = _AuthNotifier(ref);
+
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/',
     debugLogDiagnostics: false,
+    refreshListenable: notifier,
+
+    /// Redirection globale selon l'état d'authentification
+    redirect: (context, state) {
+      final authState = ref.read(authProvider);
+      final isAuthenticated = authState.isAuthenticated;
+      final isLoading = authState.isLoading;
+      final location = state.uri.path;
+
+      // Routes publiques accessibles sans connexion
+      const publicRoutes = ['/', '/login', '/inscription', '/otp'];
+      final isPublicRoute =
+          publicRoutes.any((r) => location.startsWith(r));
+
+      // En cours de chargement de la session → rester sur splash
+      if (isLoading && location == '/') return null;
+
+      // Non connecté → rediriger vers login sauf routes publiques
+      if (!isAuthenticated && !isPublicRoute) {
+        return '/login';
+      }
+
+      // Déjà connecté sur une route publique → aller au dashboard
+      if (isAuthenticated && isPublicRoute && location != '/') {
+        return '/home/dashboard';
+      }
+
+      return null; // Pas de redirection
+    },
+
     routes: [
       // Splash screen — point d'entrée
       GoRoute(
@@ -33,11 +73,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'splash',
         builder: (context, state) => const SplashScreen(),
       ),
-      // Authentification
+
+      // ── Authentification ────────────────────────────────────────────────
       GoRoute(
         path: '/login',
         name: 'login',
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/inscription',
+        name: 'inscription',
+        builder: (context, state) => const InscriptionScreen(),
       ),
       GoRoute(
         path: '/otp',
@@ -47,7 +93,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return OtpScreen(phone: phone);
         },
       ),
-      // Shell avec BottomNavigationBar persistante
+
+      // ── Shell avec BottomNavigationBar persistante ──────────────────────
       ShellRoute(
         builder: (context, state, child) => MainShell(child: child),
         routes: [
@@ -73,7 +120,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-      // Routes hors shell (plein écran)
+
+      // ── Routes hors shell (plein écran) ─────────────────────────────────
       GoRoute(
         path: '/home/commandes/:id',
         name: 'commandeDetail',
@@ -98,9 +146,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return OtpConfirmationScreen(commandeId: id);
         },
       ),
+      GoRoute(
+        path: '/notifications',
+        name: 'notifications',
+        builder: (context, state) => const NotificationsScreen(),
+      ),
     ],
   );
 });
+
+/// ChangeNotifier qui se déclenche lors des changements d'état d'auth
+/// Permet à GoRouter de réévaluer ses redirections automatiquement
+class _AuthNotifier extends ChangeNotifier {
+  _AuthNotifier(Ref ref) {
+    // Écouter les changements du provider auth
+    ref.listen(authProvider, (_, __) => notifyListeners());
+  }
+}
 
 /// Shell principal avec BottomNavigationBar persistante
 class MainShell extends ConsumerStatefulWidget {

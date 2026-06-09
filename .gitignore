@@ -33,6 +33,19 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Firebase — clés sensibles à ne jamais committer
+lib/firebase_options.dart
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+
+# Scripts Node.js
+node_modules/
+package.json
+package-lock.json
+scripts/node_modules/
+scripts/package.json
+scripts/package-lock.json
+
 # Symbolication related
 app.*.symbols
 

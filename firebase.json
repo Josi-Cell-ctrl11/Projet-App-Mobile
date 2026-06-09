@@ -1,0 +1,33 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "ozelservice-livreur",
+          "appId": "1:595426114979:android:0a83f0e2c2ec6bb28cee16",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "ozelservice-livreur",
+          "appId": "1:595426114979:ios:77c55d2879b1703a8cee16",
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "ozelservice-livreur",
+          "configurations": {
+            "android": "1:595426114979:android:0a83f0e2c2ec6bb28cee16",
+            "ios": "1:595426114979:ios:77c55d2879b1703a8cee16"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}

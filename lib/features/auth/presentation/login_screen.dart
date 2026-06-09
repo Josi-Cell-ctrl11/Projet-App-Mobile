@@ -170,6 +170,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   icon: Icons.send,
                 ),
                 const SizedBox(height: 24),
+                // Lien inscription
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Pas encore livreur ?',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.kTextSecondary,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => context.push('/inscription'),
+                      child: const Text(
+                        'S\'inscrire',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.kPrimaryOrange,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
                 // Note MVP
                 Container(
                   padding: const EdgeInsets.all(12),

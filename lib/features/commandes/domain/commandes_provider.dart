@@ -4,10 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../shared/models/commande.dart';
 import '../data/commandes_repository.dart';
+import '../data/firestore_commandes_repository.dart';
 
 /// Provider du repository des commandes
+/// Utilise Firestore en production.
 final commandesRepositoryProvider = Provider<ICommandesRepository>((ref) {
-  return MockCommandesRepository();
+  return FirestoreCommandesRepository();
 });
 
 /// Provider de la liste des commandes disponibles

@@ -116,7 +116,7 @@ class NotificationService {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.kPrimaryOrange.withOpacity(0.1),
+                color: AppColors.kPrimaryOrange.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
@@ -125,7 +125,7 @@ class NotificationService {
                 size: 24,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 12), 
             const Expanded(
               child: Text(
                 'Activer les notifications',

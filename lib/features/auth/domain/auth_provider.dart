@@ -2,6 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/models/livreur.dart';
 import '../data/auth_repository.dart';
+import '../data/firebase_auth_repository.dart';
 
 /// États possibles de l'authentification
 enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
@@ -40,8 +41,10 @@ class AuthState {
 }
 
 /// Provider du repository d'authentification
+/// Utilise Firebase Phone Auth + Firestore en production.
+/// Remplacer par MockAuthRepository() pour les tests.
 final authRepositoryProvider = Provider<IAuthRepository>((ref) {
-  return MockAuthRepository();
+  return FirebaseAuthRepository();
 });
 
 /// Provider principal de l'authentification

@@ -9,27 +9,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/notifications/notification_service.dart';
+import 'firebase_options.dart';
 
 /// Handler de messages en arrière-plan (top-level, requis par Firebase)
-/// Doit être enregistré avant runApp()
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // Firebase est déjà initialisé à ce stade
   await firebaseMessagingBackgroundHandler(message);
 }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialiser Firebase (avec gestion gracieuse des erreurs pour le MVP)
   try {
-    await Firebase.initializeApp();
-    // Enregistrer le handler de messages en arrière-plan
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   } catch (e) {
-    // Firebase non configuré pour le MVP — l'app fonctionne sans notifications
     developer.log(
-      '[Main] Firebase non initialisé (MVP) : $e',
+      '[Main] Firebase non initialisé : $e',
       name: 'Main',
     );
   }
