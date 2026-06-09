@@ -1,50 +1,59 @@
+import "package:cloud_firestore/cloud_firestore.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 
+import "../../../core/services/firestore_service.dart";
 import "../../../shared/models/wallet_transaction.dart";
+import "../../auth/application/auth_session.dart";
 
-/// Historique wallet mock + mutations simples.
+/// Historique wallet — synchronisé avec Firestore.
 class WalletNotifier extends Notifier<List<WalletTransaction>> {
   @override
-  List<WalletTransaction> build() => [
-        WalletTransaction(
-          id: "tx1",
-          label: "Cashback OzelFoods",
-          amountFcfa: 500,
-          type: WalletTxType.credit,
-          createdAt: DateTime.now().subtract(const Duration(days: 2)),
-        ),
-        WalletTransaction(
-          id: "tx2",
-          label: "Livraison Rapid Colis",
-          amountFcfa: 2500,
-          type: WalletTxType.debit,
-          createdAt: DateTime.now().subtract(const Duration(days: 5)),
-        ),
-      ];
-
-  void addCredit(String label, double amountFcfa) {
-    final tx = WalletTransaction(
-      id: "tx-${DateTime.now().millisecondsSinceEpoch}",
-      label: label,
-      amountFcfa: amountFcfa,
-      type: WalletTxType.credit,
-      createdAt: DateTime.now(),
-    );
-    state = [tx, ...state];
+  List<WalletTransaction> build() {
+    // Écoute en temps réel si utilisateur connecté
+    final uid = ref.watch(authSessionProvider).user?.id;
+    if (uid != null) {
+      FirestoreService.instance
+          .walletStream(uid)
+          .listen((snapshot) {
+        state = snapshot.docs
+            .map((doc) => WalletTransaction.fromJson(doc.data()))
+            .toList();
+      });
+    }
+    return [];
   }
 
-  void addDebit(String label, double amountFcfa) {
+  Future<void> addCredit(String label, double amountFcfa) =>
+      _addTx(label, amountFcfa, WalletTxType.credit);
+
+  Future<void> addDebit(String label, double amountFcfa) =>
+      _addTx(label, amountFcfa, WalletTxType.debit);
+
+  Future<void> _addTx(
+      String label, double amountFcfa, WalletTxType type) async {
+    final uid = ref.read(authSessionProvider).user?.id;
     final tx = WalletTransaction(
       id: "tx-${DateTime.now().millisecondsSinceEpoch}",
       label: label,
       amountFcfa: amountFcfa,
-      type: WalletTxType.debit,
+      type: type,
       createdAt: DateTime.now(),
     );
+
+    // Mise à jour locale immédiate
     state = [tx, ...state];
+
+    // Persistance Firestore
+    if (uid != null) {
+      try {
+        await FirestoreService.instance
+            .addWalletTransaction(uid, tx.toJson());
+      } catch (_) {}
+    }
   }
 }
 
-final walletTxProvider = NotifierProvider<WalletNotifier, List<WalletTransaction>>(
+final walletTxProvider =
+    NotifierProvider<WalletNotifier, List<WalletTransaction>>(
   WalletNotifier.new,
 );

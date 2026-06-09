@@ -1,43 +1,60 @@
-// Fichier généré manuellement pour le MVP — exécute `flutterfire configure`
-// avec ton vrai projet Firebase pour remplacer ces valeurs.
+// Fichier généré par flutterfire configure — projet Firebase : aquazen-b1a7d
+// Ne pas committer ce fichier publiquement (clés sensibles).
 import "package:firebase_core/firebase_core.dart" show FirebaseOptions;
 import "package:flutter/foundation.dart"
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
-/// Options Firebase par plateforme (MVP / placeholder).
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        "OZELSERVICES : Firebase web non configuré pour ce MVP.",
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
         return ios;
+      case TargetPlatform.macOS:
+        return macos;
       default:
         throw UnsupportedError(
-          "OZELSERVICES : plateforme non supportée pour Firebase.",
+          "DefaultFirebaseOptions ne supporte pas cette plateforme.",
         );
     }
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: "AIzaSyPlaceholderKeyNotValid0000000000",
-    appId: "1:123456789000:android:abcdef00000000",
-    messagingSenderId: "123456789000",
-    projectId: "ozelservices-benin-placeholder",
-    storageBucket: "ozelservices-benin-placeholder.appspot.com",
+    apiKey: "AIzaSyA1gyoTRui5vyFPifpis8nlJ0IWnBcGjMs",
+    appId: "1:290294089161:android:452dfadfa8d883968cd418",
+    messagingSenderId: "290294089161",
+    projectId: "aquazen-b1a7d",
+    storageBucket: "aquazen-b1a7d.firebasestorage.app",
   );
 
+  // iOS — à compléter avec GoogleService-Info.plist quand xcodeproj sera installé
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: "AIzaSyPlaceholderIos000000000000000",
-    appId: "1:123456789000:ios:abcdef00000001",
-    messagingSenderId: "123456789000",
-    projectId: "ozelservices-benin-placeholder",
-    storageBucket: "ozelservices-benin-placeholder.appspot.com",
+    apiKey: "AIzaSyA1gyoTRui5vyFPifpis8nlJ0IWnBcGjMs",
+    appId: "1:290294089161:ios:000000000000000",
+    messagingSenderId: "290294089161",
+    projectId: "aquazen-b1a7d",
+    storageBucket: "aquazen-b1a7d.firebasestorage.app",
     iosBundleId: "com.example.ozelservices",
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: "AIzaSyA1gyoTRui5vyFPifpis8nlJ0IWnBcGjMs",
+    appId: "1:290294089161:ios:000000000000000",
+    messagingSenderId: "290294089161",
+    projectId: "aquazen-b1a7d",
+    storageBucket: "aquazen-b1a7d.firebasestorage.app",
+    iosBundleId: "com.example.ozelservices",
+  );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: "AIzaSyA1gyoTRui5vyFPifpis8nlJ0IWnBcGjMs",
+    appId: "1:290294089161:web:000000000000000",
+    messagingSenderId: "290294089161",
+    projectId: "aquazen-b1a7d",
+    storageBucket: "aquazen-b1a7d.firebasestorage.app",
   );
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/payment/fedapay_service.dart';
+import '../../../core/payment/fedapay_webview_screen.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/models/circuit_model.dart';
@@ -54,10 +54,16 @@ class _OzelToursReservationScreenState
       return;
     }
     setState(() => _loading = true);
-    final res = await FedaPayService()
-        .pay(amountFcfa: _total, method: PaymentMethod.mtnMomo);
+    final paid = await lancerPaiementFedaPay(
+      context: context,
+      montant: _total,
+      description: "Ozel Tours — ${widget.circuit.nom}",
+      customerName: "Client Ozel",
+      customerPhone: "",
+      customerEmail: "",
+    );
     setState(() => _loading = false);
-    if (!mounted || !res.success) return;
+    if (!mounted || !paid) return;
 
     final id =
         'TR-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';

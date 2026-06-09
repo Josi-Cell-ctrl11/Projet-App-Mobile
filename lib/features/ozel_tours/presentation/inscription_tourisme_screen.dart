@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/formatters.dart';
 
 /// Ecran d'inscription au tourisme local.
 class InscriptionTourismeScreen extends ConsumerStatefulWidget {
@@ -176,9 +177,15 @@ class _InscriptionTourismeScreenState
             TextField(
               controller: _phoneCtrl,
               keyboardType: TextInputType.phone,
+              inputFormatters: [PhoneBeninInputFormatter()],
               decoration: const InputDecoration(
-                labelText: 'Téléphone (+229)',
-                hintText: '+229 XX XX XX XX',
+                labelText: 'Téléphone',
+                hintText: '01 97 90 90 98',
+                prefixText: '+229 ',
+                prefixStyle: TextStyle(
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w600,
+                ),
                 prefixIcon: Icon(Icons.phone_rounded),
                 border: OutlineInputBorder(),
               ),

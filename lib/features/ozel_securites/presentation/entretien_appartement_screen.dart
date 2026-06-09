@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/formatters.dart';
 import '../../../shared/widgets/ozel_text_field.dart';
 
 /// Ecran demande de devis Entretien Appartement Ozel Securites.
@@ -207,9 +208,12 @@ class _EntretienAppartementScreenState
           const SizedBox(height: 8),
           OzelTextField(
             controller: _whatsapp,
-            label: '+229 XX XX XX XX',
+            label: 'WhatsApp *',
+            hint: '01 97 90 90 98',
+            prefixText: '+229 ',
             prefixIcon: Icons.chat_rounded,
             keyboardType: TextInputType.phone,
+            inputFormatters: [PhoneBeninInputFormatter()],
           ),
           const SizedBox(height: 16),
 

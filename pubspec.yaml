@@ -26,14 +26,19 @@ dependencies:
   # google_maps_flutter: ^2.10.0  # Desactive temporairement — cartes mockees en attendant cle API
   image_picker: ^1.1.2
 
-  # Firebase (FCM) — remplacer google-services.json par ton projet Firebase
+  # Firebase (FCM + Auth + Crashlytics + Firestore + Analytics)
   firebase_core: ^3.12.1
   firebase_messaging: ^15.2.1
+  firebase_auth: ^5.3.1
+  firebase_crashlytics: ^4.1.3
+  cloud_firestore: ^5.6.0
+  firebase_analytics: ^11.3.3
+
+  # Paiement FedaPay (WebView)
+  webview_flutter: ^4.9.0
 
   # Stockage local
   shared_preferences: ^2.5.2
-
-  # Utilitaires
   intl: ^0.20.2
   uuid: ^4.5.1
   pdf: ^3.11.1

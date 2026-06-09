@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/payment/fedapay_service.dart';
+import '../../../core/payment/fedapay_webview_screen.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/formatters.dart';
 
@@ -18,15 +18,20 @@ class OzelEventPaiementScreen extends ConsumerStatefulWidget {
 class _OzelEventPaiementScreenState
     extends ConsumerState<OzelEventPaiementScreen> {
   static const Color _color = Color(0xFF6A1B9A);
-  PaymentMethod _method = PaymentMethod.mtnMomo;
   bool _loading = false;
 
   Future<void> _payer() async {
     setState(() => _loading = true);
-    final res = await FedaPayService()
-        .pay(amountFcfa: widget.data['acompte'] as double, method: _method);
+    final paid = await lancerPaiementFedaPay(
+      context: context,
+      montant: widget.data['acompte'] as double,
+      description: "Ozel Event — ${widget.data['type']}",
+      customerName: "Client Ozel",
+      customerPhone: widget.data['whatsapp'] as String? ?? "",
+      customerEmail: "",
+    );
     setState(() => _loading = false);
-    if (!mounted || !res.success) return;
+    if (!mounted || !paid) return;
     context.pushReplacement('/ozel-event/confirmation', extra: widget.data);
   }
 
@@ -105,47 +110,27 @@ class _OzelEventPaiementScreenState
           ),
           const SizedBox(height: 16),
 
-          // Moyen de paiement
-          const Text('Moyen de paiement',
-              style: TextStyle(
-                  fontWeight: FontWeight.w700, fontSize: 15)),
-          const SizedBox(height: 10),
-          ...PaymentMethod.values.map((m) {
-            final sel = m == _method;
-            return GestureDetector(
-              onTap: () => setState(() => _method = m),
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: sel
-                      ? _color.withValues(alpha: 0.06)
-                      : AppColors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                      color: sel
-                          ? _color.withValues(alpha: 0.4)
-                          : AppColors.disabled),
+          // Info paiement
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: _color.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: _color.withValues(alpha: 0.2)),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.phone_android_rounded, size: 18),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Paiement sécurisé via FedaPay — MTN MoMo, Moov Money ou Visa',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    Icon(Icons.phone_android_rounded,
-                        color: sel ? _color : AppColors.textSecondary),
-                    const SizedBox(width: 12),
-                    Expanded(
-                        child: Text(m.labelFr,
-                            style: TextStyle(
-                                fontWeight: sel
-                                    ? FontWeight.w700
-                                    : FontWeight.w400))),
-                    if (sel)
-                      const Icon(Icons.check_circle_rounded,
-                          color: Color(0xFF6A1B9A)),
-                  ],
-                ),
-              ),
-            );
-          }),
+              ],
+            ),
+          ),
 
           const SizedBox(height: 12),
 

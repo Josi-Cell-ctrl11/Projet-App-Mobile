@@ -4,6 +4,7 @@ import "package:go_router/go_router.dart";
 import "package:uuid/uuid.dart";
 
 import "../../../core/payment/fedapay_service.dart";
+import "../../../core/payment/fedapay_webview_screen.dart";
 import "../../../core/theme/app_colors.dart";
 import "../../../core/utils/formatters.dart";
 import "../../../core/utils/rapid_colis_pricing.dart";
@@ -39,13 +40,20 @@ class _ColisConfirmScreenState extends ConsumerState<ColisConfirmScreen> {
     final draft = ref.read(colisDraftProvider);
     final price = RapidColisPricing.quote(
       distanceKm: draft.distanceKm,
-      weightKg: 1, // poids sera confirme par le livreur
+      weightKg: 1,
     );
 
     setState(() => _loading = true);
-    final res = await FedaPayService().pay(amountFcfa: price, method: _method);
+    final paid = await lancerPaiementFedaPay(
+      context: context,
+      montant: price,
+      description: "Rapid Colis — ${draft.pointA} → ${draft.pointB}",
+      customerName: "Client Ozel",
+      customerPhone: "",
+      customerEmail: "",
+    );
     setState(() => _loading = false);
-    if (!mounted || !res.success) return;
+    if (!mounted || !paid) return;
 
     ref.read(walletTxProvider.notifier).addDebit(
           "Rapid Colis (${draft.pointA} -> ${draft.pointB})",

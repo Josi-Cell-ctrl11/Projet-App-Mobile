@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/formatters.dart';
 
 /// Ecran d'accueil Ozel Event — evenementiel au Benin.
 /// Système de devis uniquement (pas de prix fixes).
@@ -18,15 +20,29 @@ class _OzelEventHomeScreenState extends ConsumerState<OzelEventHomeScreen> {
   // Formulaire de demande de devis
   String? _selectedEventType;
   final Set<String> _selectedPrestations = {};
-  final TextEditingController _dateCtrl = TextEditingController();
+  DateTime? _dateEvenement;
   final TextEditingController _lieuCtrl = TextEditingController();
   final TextEditingController _invitesCtrl = TextEditingController();
   final TextEditingController _whatsappCtrl = TextEditingController();
   final TextEditingController _notesCtrl = TextEditingController();
 
+  Future<void> _pickDate() async {
+    final d = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().add(const Duration(days: 7)),
+      firstDate: DateTime.now().add(const Duration(days: 1)),
+      lastDate: DateTime.now().add(const Duration(days: 730)),
+      builder: (ctx, child) => Theme(
+        data: Theme.of(ctx).copyWith(
+            colorScheme: const ColorScheme.light(primary: Color(0xFF6A1B9A))),
+        child: child!,
+      ),
+    );
+    if (d != null) setState(() => _dateEvenement = d);
+  }
+
   @override
   void dispose() {
-    _dateCtrl.dispose();
     _lieuCtrl.dispose();
     _invitesCtrl.dispose();
     _whatsappCtrl.dispose();
@@ -37,7 +53,7 @@ class _OzelEventHomeScreenState extends ConsumerState<OzelEventHomeScreen> {
   void _demanderDevis() {
     if (_selectedEventType == null ||
         _selectedPrestations.isEmpty ||
-        _dateCtrl.text.isEmpty ||
+        _dateEvenement == null ||
         _lieuCtrl.text.isEmpty ||
         _invitesCtrl.text.isEmpty ||
         _whatsappCtrl.text.isEmpty) {
@@ -98,7 +114,7 @@ class _OzelEventHomeScreenState extends ConsumerState<OzelEventHomeScreen> {
     setState(() {
       _selectedEventType = null;
       _selectedPrestations.clear();
-      _dateCtrl.clear();
+      _dateEvenement = null;
       _lieuCtrl.clear();
       _invitesCtrl.clear();
       _whatsappCtrl.clear();
@@ -337,13 +353,35 @@ class _OzelEventHomeScreenState extends ConsumerState<OzelEventHomeScreen> {
                           color: AppColors.black),
                     ),
                     const SizedBox(height: 12),
-                    TextField(
-                      controller: _dateCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Date de l\'evenement',
-                        hintText: 'Ex: 20/06/2026',
-                        prefixIcon: Icon(Icons.calendar_today_rounded),
-                        border: OutlineInputBorder(),
+                    // Date — date picker, pas de saisie libre
+                    GestureDetector(
+                      onTap: _pickDate,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 16),
+                        decoration: BoxDecoration(
+                          color: AppColors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.disabled),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.calendar_today_rounded,
+                                color: Color(0xFF6A1B9A), size: 20),
+                            const SizedBox(width: 12),
+                            Text(
+                              _dateEvenement == null
+                                  ? 'Date de l\'événement *'
+                                  : '${_dateEvenement!.day.toString().padLeft(2, '0')}/${_dateEvenement!.month.toString().padLeft(2, '0')}/${_dateEvenement!.year}',
+                              style: TextStyle(
+                                color: _dateEvenement == null
+                                    ? AppColors.textSecondary
+                                    : AppColors.black,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -357,9 +395,14 @@ class _OzelEventHomeScreenState extends ConsumerState<OzelEventHomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
+                    // Invités — chiffres uniquement, max 5 chiffres
                     TextField(
                       controller: _invitesCtrl,
                       keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(5),
+                      ],
                       decoration: const InputDecoration(
                         labelText: 'Nombre d\'invités estimé',
                         hintText: 'Ex: 150',
@@ -368,12 +411,19 @@ class _OzelEventHomeScreenState extends ConsumerState<OzelEventHomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
+                    // WhatsApp — formatter automatique
                     TextField(
                       controller: _whatsappCtrl,
                       keyboardType: TextInputType.phone,
+                      inputFormatters: [PhoneBeninInputFormatter()],
                       decoration: const InputDecoration(
                         labelText: 'Numéro WhatsApp *',
-                        hintText: '+229 XX XX XX XX',
+                        hintText: '01 97 90 90 98',
+                        prefixText: '+229 ',
+                        prefixStyle: TextStyle(
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w600,
+                        ),
                         prefixIcon: Icon(Icons.chat_rounded),
                         border: OutlineInputBorder(),
                       ),

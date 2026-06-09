@@ -4,6 +4,7 @@ import "package:go_router/go_router.dart";
 
 import "../../../core/constants/app_constants.dart";
 import "../../../core/payment/fedapay_service.dart";
+import "../../../core/payment/fedapay_webview_screen.dart";
 import "../../../core/theme/app_colors.dart";
 import "../../../core/utils/food_business_rules.dart";
 import "../../../core/utils/formatters.dart";
@@ -42,8 +43,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   final _address = TextEditingController(
     text: "Haie Vive, Cotonou — pres de St Michel",
   );
-  PaymentMethod _method = PaymentMethod.mtnMomo;
   DeliveryZone _zone = DeliveryZone.cotonouCentre;
+  PaymentMethod _method = PaymentMethod.mtnMomo;
   bool _simulateLate = false;
   bool _simulateRestaurantReject = false;
   bool _loading = false;
@@ -165,13 +166,21 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
     setState(() => _loading = true);
 
-    // Paiement du repas uniquement (pas les frais de livraison)
-    final fedapay = FedaPayService();
-    final res = await fedapay.pay(amountFcfa: subtotal, method: _method);
-    setState(() => _loading = false);
-    if (!mounted || !res.success) return;
-
+    // Récupérer restaurantName et user avant le paiement
     final restaurantName = cart.first.restaurantName;
+    final user = ref.read(authSessionProvider).user;
+
+    final paid = await lancerPaiementFedaPay(
+      context: context,
+      montant: subtotal,
+      description: "OzelFoods — $restaurantName",
+      customerName: user?.displayName ?? "Client Ozel",
+      customerPhone: user?.phone ?? "",
+      customerEmail: user?.email ?? "",
+    );
+    setState(() => _loading = false);
+    if (!mounted || !paid) return;
+
     final order = ref.read(foodOrdersProvider.notifier).startOrder(
           restaurantName: restaurantName,
           totalFcfa: subtotal + deliveryFee,
@@ -180,7 +189,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         );
 
     // Points Ozel : 1 FCFA = 1 point sur le montant repas paye
-    final user = ref.read(authSessionProvider).user;
     if (user != null) {
       final gained = AppConstants.fcfaToPoints(subtotal);
       await ref.read(authSessionProvider.notifier).updateUser(

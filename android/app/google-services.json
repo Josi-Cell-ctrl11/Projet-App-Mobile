@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "123456789000",
-    "project_id": "ozelservices-benin-placeholder",
-    "storage_bucket": "ozelservices-benin-placeholder.appspot.com"
+    "project_number": "290294089161",
+    "project_id": "aquazen-b1a7d",
+    "storage_bucket": "aquazen-b1a7d.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:123456789000:android:abcdef00000000",
+        "mobilesdk_app_id": "1:290294089161:android:452dfadfa8d883968cd418",
         "android_client_info": {
           "package_name": "com.example.ozelservices"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyPlaceholderKeyNotValid0000000000"
+          "current_key": "AIzaSyA1gyoTRui5vyFPifpis8nlJ0IWnBcGjMs"
         }
       ],
       "services": {

@@ -6,13 +6,14 @@ import "package:image_picker/image_picker.dart";
 import "package:uuid/uuid.dart";
 
 import "../../../core/theme/app_colors.dart";
+import "../../../core/utils/formatters.dart";
 import "../../../shared/models/app_user.dart";
 import "../../../shared/widgets/ozel_button.dart";
 import "../../../shared/widgets/ozel_text_field.dart";
 import "../application/auth_session.dart";
 
 /// Inscription en 2 etapes style Gozem/Yango.
-/// Etape 1 : Informations personnelles (prenom, nom, pseudo, photo)
+/// Etape 1 : Informations personnelles (prenom, nom, photo)
 /// Etape 2 : Coordonnees et verification (tel, WhatsApp, NPI, CGU)
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -27,12 +28,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   // ── Etape 1 ────────────────────────────────────────────────────────────────
   final _firstName = TextEditingController();
   final _lastName = TextEditingController();
-  final _pseudo = TextEditingController();
   String? _avatarPath;
 
   // ── Etape 2 ────────────────────────────────────────────────────────────────
-  final _phone = TextEditingController(text: "+229");
-  final _whatsapp = TextEditingController(text: "+229");
+  final _phone = TextEditingController();
+  final _whatsapp = TextEditingController();
   final _email = TextEditingController();
   final _npi = TextEditingController();
   bool _cguAccepted = false;
@@ -40,7 +40,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   // ── Erreurs ────────────────────────────────────────────────────────────────
   String? _errFirstName;
   String? _errLastName;
-  String? _errPseudo;
   String? _errPhone;
   String? _errWhatsapp;
   String? _errEmail;
@@ -53,7 +52,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   void dispose() {
     _firstName.dispose();
     _lastName.dispose();
-    _pseudo.dispose();
     _phone.dispose();
     _whatsapp.dispose();
     _email.dispose();
@@ -68,26 +66,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           _firstName.text.trim().isEmpty ? "Le prenom est obligatoire" : null;
       _errLastName =
           _lastName.text.trim().isEmpty ? "Le nom est obligatoire" : null;
-      _errPseudo =
-          _pseudo.text.trim().isEmpty ? "Le pseudo est obligatoire" : null;
     });
-    return _errFirstName == null &&
-        _errLastName == null &&
-        _errPseudo == null;
+    return _errFirstName == null && _errLastName == null;
   }
 
   // ── Validation etape 2 ─────────────────────────────────────────────────────
   bool _validerEtape2() {
-    final phoneRegex = RegExp(r'^\+229\d{8}$');
+    // Le formatter produit "XX XX XX XX" (10 chiffres + 4 espaces = 14 chars)
+    final phoneRegex = RegExp(r'^\d{2} \d{2} \d{2} \d{2} \d{2}$');
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     final npiRegex = RegExp(r'^\d{10}$');
 
     setState(() {
       _errPhone = !phoneRegex.hasMatch(_phone.text.trim())
-          ? "Format invalide (+229 XX XX XX XX)"
+          ? "Numéro incomplet (10 chiffres requis)"
           : null;
       _errWhatsapp = !phoneRegex.hasMatch(_whatsapp.text.trim())
-          ? "Format invalide (+229 XX XX XX XX)"
+          ? "Numéro incomplet (10 chiffres requis)"
           : null;
       _errEmail = !emailRegex.hasMatch(_email.text.trim())
           ? "Format email invalide"
@@ -126,9 +121,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       name: "$firstName $lastName",
       firstName: firstName,
       lastName: lastName,
-      pseudo: _pseudo.text.trim(),
-      phone: _phone.text.trim(),
-      whatsapp: _whatsapp.text.trim(),
+      phone: "+229${_phone.text.replaceAll(' ', '').trim()}",
+      whatsapp: "+229${_whatsapp.text.replaceAll(' ', '').trim()}",
       email: _email.text.trim(),
       npi: _npi.text.trim(),
       avatarUrl: _avatarPath,
@@ -253,15 +247,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           prefixIcon: Icons.person_outline_rounded,
         ),
         if (_errLastName != null) _ErrMsg(_errLastName!),
-        const SizedBox(height: 12),
-
-        // Pseudo
-        OzelTextField(
-          controller: _pseudo,
-          label: "Pseudo (ex: @monpseudo) *",
-          prefixIcon: Icons.alternate_email_rounded,
-        ),
-        if (_errPseudo != null) _ErrMsg(_errPseudo!),
 
         const SizedBox(height: 32),
 
@@ -320,9 +305,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         // Telephone
         OzelTextField(
           controller: _phone,
-          label: "Telephone (+229XXXXXXXX) *",
+          label: "Telephone *",
+          hint: "01 97 90 90 98",
+          prefixText: "+229 ",
           keyboardType: TextInputType.phone,
           prefixIcon: Icons.phone_android_rounded,
+          inputFormatters: [PhoneBeninInputFormatter()],
         ),
         if (_errPhone != null) _ErrMsg(_errPhone!),
         const SizedBox(height: 12),
@@ -330,9 +318,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         // WhatsApp
         OzelTextField(
           controller: _whatsapp,
-          label: "WhatsApp (+229 XX XX XX XX) *",
+          label: "WhatsApp *",
+          hint: "01 97 90 90 98",
+          prefixText: "+229 ",
           keyboardType: TextInputType.phone,
           prefixIcon: Icons.chat_rounded,
+          inputFormatters: [PhoneBeninInputFormatter()],
         ),
         if (_errWhatsapp != null) _ErrMsg(_errWhatsapp!),
         const SizedBox(height: 4),

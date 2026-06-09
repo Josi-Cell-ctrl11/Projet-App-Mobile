@@ -28,6 +28,8 @@ import "../features/ozel_securites/presentation/ozel_securites_jardinage_screen.
 import "../features/ozel_securites/presentation/ozel_securites_vigile_screen.dart";
 import "../features/ozel_securites/presentation/ozel_securites_urgence_screen.dart";
 import "../features/ozel_securites/presentation/ozel_securites_mes_contrats_screen.dart";
+import "../features/ozel_securites/presentation/nounou_screen.dart";
+import "../features/ozel_securites/presentation/entretien_appartement_screen.dart";
 
 // ── OzelTic ───────────────────────────────────────────────────────────────────
 import "../features/ozel_tic/presentation/ozel_tic_home_screen.dart";
@@ -35,6 +37,11 @@ import "../features/ozel_tic/presentation/ozel_tic_depannage_screen.dart";
 import "../features/ozel_tic/presentation/ozel_tic_devis_screen.dart";
 import "../features/ozel_tic/presentation/ozel_tic_domaine_screen.dart";
 import "../features/ozel_tic/presentation/ozel_tic_mes_tickets_screen.dart";
+import "../features/ozel_tic/presentation/cameras_surveillance_screen.dart";
+import "../features/ozel_tic/presentation/reseaux_screen.dart";
+
+// ── Ozel Tours ────────────────────────────────────────────────────────────────
+import "../features/ozel_tours/presentation/inscription_tourisme_screen.dart";
 
 // ── OzelFoods ─────────────────────────────────────────────────────────────────
 import "../features/ozelfoods/presentation/cart_screen.dart";
@@ -50,7 +57,6 @@ import "../features/rapid_colis/presentation/colis_form_screen.dart";
 import "../features/rapid_colis/presentation/colis_quote_screen.dart";
 import "../features/rapid_colis/presentation/colis_tracking_screen.dart";
 import "../features/shell/main_shell_screen.dart";
-import "../features/wallet/presentation/recharge_momo_screen.dart";
 import "../features/wallet/presentation/wallet_screen.dart";
 import "../shared/models/circuit_model.dart";
 import "../shared/models/hotesse_model.dart";
@@ -82,8 +88,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: "otp",
-            builder: (_, state) =>
-                OtpScreen(phone: state.extra as String? ?? ""),
+            builder: (_, state) {
+              final extra = state.extra as Map?;
+              return OtpScreen(
+                phone: extra?["phone"] as String? ?? "",
+              );
+            },
           ),
         ],
       ),
@@ -159,6 +169,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: "/ozel-securites/contrats",
         builder: (_, __) => const OzelSecuritesMesContratsScreen(),
       ),
+      GoRoute(
+        path: "/ozel-securites/nounou",
+        builder: (_, __) => const NounouScreen(),
+      ),
+      GoRoute(
+        path: "/ozel-securites/entretien",
+        builder: (_, __) => const EntretienAppartementScreen(),
+      ),
 
       // ── OZELTIC ─────────────────────────────────────────────────────────────
       GoRoute(
@@ -180,6 +198,20 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: "/ozel-tic/tickets",
         builder: (_, __) => const OzelTicMesTicketsScreen(),
+      ),
+      GoRoute(
+        path: "/ozel-tic/cameras",
+        builder: (_, __) => const CamerasSurveillanceScreen(),
+      ),
+      GoRoute(
+        path: "/ozel-tic/reseaux",
+        builder: (_, __) => const ReseauxScreen(),
+      ),
+
+      // ── OZEL TOURS (suite) ───────────────────────────────────────────────
+      GoRoute(
+        path: "/ozel-tours/tourisme",
+        builder: (_, __) => const InscriptionTourismeScreen(),
       ),
 
       // ── SHELL (5 onglets) ───────────────────────────────────────────────────
@@ -243,12 +275,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             GoRoute(
               path: "/wallet",
               builder: (_, __) => const WalletScreen(),
-              routes: [
-                GoRoute(
-                  path: "recharge",
-                  builder: (_, __) => const RechargeMomoScreen(),
-                ),
-              ],
             ),
           ]),
           StatefulShellBranch(routes: [
