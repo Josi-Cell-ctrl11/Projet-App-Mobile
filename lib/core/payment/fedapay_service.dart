@@ -101,7 +101,7 @@ class FedaPayService {
               "country": "BJ",
             },
           },
-          "callback_url": "https://ozelservices.bj/payment/callback",
+          "callback_url": "https://ozelservices-payment.web.app/callback",
         }),
       );
 
@@ -122,7 +122,7 @@ class FedaPayService {
       final token =
           tokenResponse.data["token"]?.toString() ?? "";
       final checkoutUrl =
-          "https://checkout${_isLive ? '' : '-sandbox'}.fedapay.com/pay/$token";
+          "https://checkout${_isLive ? '' : '-sandbox'}.fedapay.com/$token";
 
       return FedaPayResult(
         success: true,

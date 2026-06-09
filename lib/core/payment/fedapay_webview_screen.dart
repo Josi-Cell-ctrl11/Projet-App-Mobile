@@ -38,16 +38,40 @@ class _FedaPayWebViewScreenState extends State<FedaPayWebViewScreen> {
           onPageStarted: (_) => setState(() => _loading = true),
           onPageFinished: (_) => setState(() => _loading = false),
           onNavigationRequest: (request) {
-            // FedaPay redirige vers callback_url après paiement
-            if (request.url
-                .contains("ozelservices.bj/payment/callback")) {
-              // Succès — on vérifie via l'URL
-              final uri = Uri.parse(request.url);
+            final url = request.url;
+
+            // FedaPay sandbox redirige vers checkout-sandbox.fedapay.com/done
+            // avec ?status=approved|declined|canceled en paramètre
+            if (url.contains("fedapay.com/done") ||
+                url.contains("fedapay.com/pay") && url.contains("status=")) {
+              final uri = Uri.parse(url);
               final status = uri.queryParameters["status"];
               Navigator.pop(context, status == "approved");
               return NavigationDecision.prevent;
             }
+
+            // Intercepter la callback_url personnalisée
+            if (url.contains("ozelservices-payment.web.app/callback")) {
+              final uri = Uri.parse(url);
+              final status = uri.queryParameters["status"];
+              Navigator.pop(context, status == "approved");
+              return NavigationDecision.prevent;
+            }
+
+            // Intercepter les URLs de retour FedaPay (approved/declined)
+            if (url.contains("transaction_id") &&
+                (url.contains("approved") || url.contains("declined") ||
+                    url.contains("canceled"))) {
+              final approved = url.contains("approved");
+              Navigator.pop(context, approved);
+              return NavigationDecision.prevent;
+            }
+
             return NavigationDecision.navigate;
+          },
+          onWebResourceError: (error) {
+            // Ignorer les erreurs sur la callback URL (domaine inexistant)
+            // FedaPay a déjà envoyé le statut dans l'URL
           },
         ),
       )
@@ -123,6 +147,17 @@ class _FedaPayWebViewScreenState extends State<FedaPayWebViewScreen> {
                 ],
               ),
             ),
+          // Bouton de confirmation manuelle (fallback si pas de redirection auto)
+          if (!_loading)
+            Positioned(
+              bottom: 16,
+              left: 16,
+              right: 16,
+              child: _ConfirmationManuelle(
+                transactionId: widget.transactionId,
+                onConfirm: (approved) => Navigator.pop(context, approved),
+              ),
+            ),
         ],
       ),
     );
@@ -184,3 +219,98 @@ Future<bool> lancerPaiementFedaPay({
 }
 
 // Import nécessaire déjà en haut du fichier
+
+// ── Widget de confirmation manuelle ──────────────────────────────────────────
+// Affiché en overlay quand FedaPay ne redirige pas automatiquement (sandbox)
+
+class _ConfirmationManuelle extends StatefulWidget {
+  final String transactionId;
+  final void Function(bool approved) onConfirm;
+
+  const _ConfirmationManuelle({
+    required this.transactionId,
+    required this.onConfirm,
+  });
+
+  @override
+  State<_ConfirmationManuelle> createState() => _ConfirmationManuelleState();
+}
+
+class _ConfirmationManuelleState extends State<_ConfirmationManuelle> {
+  bool _checking = false;
+  bool _visible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Afficher le bouton après 5 secondes (laisse le temps à FedaPay de rediriger)
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted) setState(() => _visible = true);
+    });
+  }
+
+  Future<void> _verifierStatut() async {
+    setState(() => _checking = true);
+    final approved =
+        await FedaPayService().checkTransactionStatus(widget.transactionId);
+    if (mounted) {
+      setState(() => _checking = false);
+      widget.onConfirm(approved);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_visible) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline, color: AppColors.primary, size: 18),
+          const SizedBox(width: 8),
+          const Expanded(
+            child: Text(
+              'Paiement effectué ? Cliquez pour confirmer',
+              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            height: 36,
+            child: ElevatedButton(
+              onPressed: _checking ? null : _verifierStatut,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+              ),
+              child: _checking
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Text('Vérifier', style: TextStyle(fontSize: 12)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
