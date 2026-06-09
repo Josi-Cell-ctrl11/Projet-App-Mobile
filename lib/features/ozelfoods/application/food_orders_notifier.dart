@@ -1,104 +1,82 @@
 import "dart:async";
 
+import "package:cloud_firestore/cloud_firestore.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 
-import "../../../core/constants/app_constants.dart";
-import "../../../core/utils/food_business_rules.dart";
+import "../../../core/services/firestore_service.dart";
 import "../../../shared/models/food_order.dart";
 import "../../../shared/models/food_order_status.dart";
+import "../../auth/application/auth_session.dart";
 
-/// Commandes food actives + historique simple (mock).
+/// Provider du stream Firestore des commandes food de l'utilisateur connecté.
+final foodOrdersStreamProvider =
+    StreamProvider<List<FoodOrder>>((ref) {
+  final uid = ref.watch(authSessionProvider).user?.id;
+  if (uid == null) return const Stream.empty();
+
+  return FirestoreService.instance
+      .commandesFoodsStream(uid)
+      .map((snap) => snap.docs
+          .map((d) => FoodOrder.fromJson({...d.data(), "id": d.id}))
+          .toList());
+});
+
+/// Provider d'une commande précise en temps réel.
+final foodOrderLiveProvider =
+    StreamProvider.family<FoodOrder?, String>((ref, orderId) {
+  return FirebaseFirestore.instance
+      .collection("commandes_foods")
+      .doc(orderId)
+      .snapshots()
+      .map((snap) {
+    if (!snap.exists || snap.data() == null) return null;
+    return FoodOrder.fromJson({...snap.data()!, "id": snap.id});
+  });
+});
+
+/// Notifier pour créer des commandes et les écrire dans Firestore.
 class FoodOrdersNotifier extends Notifier<List<FoodOrder>> {
-  final Map<String, Timer> _timers = {};
-
   @override
-  List<FoodOrder> build() {
-    ref.onDispose(() {
-      for (final t in _timers.values) {
-        t.cancel();
-      }
-      _timers.clear();
-    });
-    return [];
-  }
+  List<FoodOrder> build() => [];
 
-  /// Crée une commande et simule la progression des statuts.
-  FoodOrder startOrder({
+  /// Crée une commande, l'écrit dans Firestore et retourne l'objet.
+  Future<FoodOrder> startOrder({
     required String restaurantName,
     required double totalFcfa,
+    required String userId,
     bool restaurantAccepted = true,
     int lateMinutes = 0,
-  }) {
-    final id = "FO-${DateTime.now().millisecondsSinceEpoch}";
+  }) async {
+    final docRef = FirebaseFirestore.instance.collection("commandes_foods").doc();
+
     final order = FoodOrder(
-      id: id,
+      id: docRef.id,
       restaurantName: restaurantName,
       totalFcfa: totalFcfa,
       status: FoodOrderStatus.preparing,
       createdAt: DateTime.now(),
+      userId: userId,
       restaurantAccepted: restaurantAccepted,
       lateMinutes: lateMinutes,
     );
+
+    // Écrire dans Firestore
+    await docRef.set(order.toJson());
+
+    // Mettre à jour l'état local
     state = [order, ...state];
-    if (!restaurantAccepted) {
-      _scheduleAutoCancel(id);
-    } else {
-      _simulateProgress(id);
-    }
+
     return order;
   }
 
-  /// Annulation automatique si le restaurant n’accepte pas sous 3 minutes (mock).
-  void _scheduleAutoCancel(String id) {
-    _timers[id]?.cancel();
-    _timers[id] = Timer(
-      Duration(minutes: AppConstants.restaurantAcceptanceMinutes),
-      () {
-        state = [
-          for (final o in state)
-            if (o.id == id) o.copyWith(cancelled: true) else o,
-        ];
-        _timers.remove(id);
-      },
-    );
-  }
-
-  void _simulateProgress(String id) {
-    _timers[id]?.cancel();
-    var step = 0;
-    _timers[id] = Timer.periodic(const Duration(seconds: 4), (timer) {
-      step++;
-      state = [
-        for (final o in state)
-          if (o.id == id) _advance(o, step) else o,
-      ];
-      if (step >= 3) {
-        timer.cancel();
-        _timers.remove(id);
-      }
-    });
-  }
-
-  FoodOrder _advance(FoodOrder o, int step) {
-    if (step == 1) {
-      return o.copyWith(status: FoodOrderStatus.riderAssigned);
-    }
-    if (step == 2) {
-      return o.copyWith(status: FoodOrderStatus.onTheWay);
-    }
-    return o.copyWith(status: FoodOrderStatus.delivered);
-  }
-
   int lateRefundPointsFor(FoodOrder order) {
-    if (order.lateMinutes <= AppConstants.lateDeliveryMinutes) return 0;
-    return FoodBusinessRules.lateRefundPoints(
-      order.totalFcfa,
-      AppConstants.lateDeliveryRefundPercent,
-    );
+    if (order.lateMinutes <= 15) return 0;
+    return (order.totalFcfa * 0.10).round();
   }
 }
 
-final foodOrdersProvider = NotifierProvider<FoodOrdersNotifier, List<FoodOrder>>(
+final foodOrdersProvider =
+    NotifierProvider<FoodOrdersNotifier, List<FoodOrder>>(
   FoodOrdersNotifier.new,
 );
 

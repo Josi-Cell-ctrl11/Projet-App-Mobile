@@ -50,7 +50,8 @@ import "../features/ozelfoods/presentation/order_tracking_screen.dart";
 import "../features/ozelfoods/presentation/restaurant_list_screen.dart";
 import "../features/ozelfoods/presentation/restaurant_menu_screen.dart";
 
-// ── Autres ────────────────────────────────────────────────────────────────────
+import "../features/ozelfoods/presentation/orders_history_screen.dart";
+import "../features/profile/presentation/edit_profile_screen.dart";
 import "../features/profile/presentation/profile_screen.dart";
 import "../features/rapid_colis/presentation/colis_confirm_screen.dart";
 import "../features/rapid_colis/presentation/colis_form_screen.dart";
@@ -248,6 +249,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                   builder: (_, state) => OrderTrackingScreen(
                       orderId: state.pathParameters["orderId"]!),
                 ),
+                GoRoute(
+                  path: "historique",
+                  builder: (_, __) => const OrdersHistoryScreen(),
+                ),
               ],
             ),
           ]),
@@ -281,6 +286,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             GoRoute(
               path: "/profil",
               builder: (_, __) => const ProfileScreen(),
+              routes: [
+                GoRoute(
+                  path: "edit",
+                  builder: (_, __) => const EditProfileScreen(),
+                ),
+              ],
             ),
           ]),
         ],

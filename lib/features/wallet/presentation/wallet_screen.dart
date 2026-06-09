@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 
 import "../../../core/constants/app_constants.dart";
+import "../../../core/payment/fedapay_webview_screen.dart";
 import "../../../core/theme/app_colors.dart";
 import "../../../core/utils/formatters.dart";
 import "../../../shared/models/wallet_transaction.dart";
@@ -58,6 +59,10 @@ class WalletScreen extends ConsumerWidget {
 
                   // ── Avantages points ───────────────────────────────────────
                   const _AvantagesSection(),
+                  const SizedBox(height: 20),
+
+                  // ── Bouton recharge wallet ─────────────────────────────────
+                  _RechargeButton(user: user),
                   const SizedBox(height: 24),
 
                   // ── Historique ─────────────────────────────────────────────
@@ -107,6 +112,149 @@ class WalletScreen extends ConsumerWidget {
                     itemBuilder: (_, i) => _TxCard(tx: txs[i]),
                   ),
                 ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Bouton recharge wallet ─────────────────────────────────────────────────
+
+class _RechargeButton extends ConsumerStatefulWidget {
+  const _RechargeButton({required this.user});
+  final dynamic user;
+
+  @override
+  ConsumerState<_RechargeButton> createState() => _RechargeButtonState();
+}
+
+class _RechargeButtonState extends ConsumerState<_RechargeButton> {
+  bool _loading = false;
+
+  static const List<double> _montants = [1000, 2000, 5000, 10000];
+
+  Future<void> _recharger() async {
+    // Choisir le montant
+    final montant = await showModalBottomSheet<double>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => _MontantPicker(montants: _montants),
+    );
+    if (montant == null || !mounted) return;
+
+    setState(() => _loading = true);
+
+    final paid = await lancerPaiementFedaPay(
+      context: context,
+      montant: montant,
+      description: "Recharge OzelWallet",
+      customerName: widget.user?.displayName ?? "Client Ozel",
+      customerPhone: widget.user?.phone ?? "",
+      customerEmail: widget.user?.email ?? "",
+    );
+
+    if (!mounted) return;
+    setState(() => _loading = false);
+
+    if (paid) {
+      await ref
+          .read(walletTxProvider.notifier)
+          .addCredit("Recharge OzelWallet", montant);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                "Recharge de ${Formatters.fcfa(montant)} effectuée ✓"),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: OutlinedButton.icon(
+        onPressed: _loading ? null : _recharger,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          side: const BorderSide(color: AppColors.primary, width: 1.5),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16)),
+        ),
+        icon: _loading
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: AppColors.primary),
+              )
+            : const Icon(Icons.add_rounded),
+        label: Text(
+          _loading ? "Traitement..." : "Recharger mon wallet",
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+      ),
+    );
+  }
+}
+
+class _MontantPicker extends StatelessWidget {
+  const _MontantPicker({required this.montants});
+  final List<double> montants;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            "Choisir le montant",
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: AppColors.black),
+          ),
+          const SizedBox(height: 16),
+          ...montants.map((m) => ListTile(
+                onTap: () => Navigator.pop(context, m),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.account_balance_wallet_rounded,
+                      color: AppColors.primary, size: 20),
+                ),
+                title: Text(
+                  Formatters.fcfa(m),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 16),
+                ),
+                trailing: const Icon(Icons.chevron_right_rounded,
+                    color: AppColors.textSecondary),
+              )),
         ],
       ),
     );

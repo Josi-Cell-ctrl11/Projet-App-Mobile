@@ -181,9 +181,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     setState(() => _loading = false);
     if (!mounted || !paid) return;
 
-    final order = ref.read(foodOrdersProvider.notifier).startOrder(
+    final order = await ref.read(foodOrdersProvider.notifier).startOrder(
           restaurantName: restaurantName,
           totalFcfa: subtotal + deliveryFee,
+          userId: user?.id ?? "",
           restaurantAccepted: !_simulateRestaurantReject,
           lateMinutes: _simulateLate ? 20 : 0,
         );

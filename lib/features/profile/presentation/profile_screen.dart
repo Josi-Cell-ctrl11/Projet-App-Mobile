@@ -133,7 +133,15 @@ class ProfileScreen extends ConsumerWidget {
                     icon: Icons.edit_rounded,
                     label: "Modifier le profil",
                     color: AppColors.primary,
-                    onTap: () => context.go("/register"),
+                    onTap: () => context.push("/profil/edit"),
+                  ),
+                  const SizedBox(height: 10),
+                  _ActionButton(
+                    icon: Icons.receipt_long_rounded,
+                    label: "Mes commandes OzelFoods",
+                    color: const Color(0xFF1565C0),
+                    outlined: true,
+                    onTap: () => context.push("/ozelfoods/historique"),
                   ),
                   const SizedBox(height: 10),
                   _ActionButton(
