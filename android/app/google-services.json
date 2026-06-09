@@ -7,6 +7,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:290294089161:android:906ae63e18e75a578cd418",
+        "android_client_info": {
+          "package_name": "bj.ozelservices.client"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1gyoTRui5vyFPifpis8nlJ0IWnBcGjMs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:290294089161:android:452dfadfa8d883968cd418",
         "android_client_info": {
           "package_name": "com.example.ozelservices"

@@ -24,13 +24,12 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: "AIzaSyA1gyoTRui5vyFPifpis8nlJ0IWnBcGjMs",
-    appId: "1:290294089161:android:452dfadfa8d883968cd418",
-    messagingSenderId: "290294089161",
-    projectId: "aquazen-b1a7d",
-    storageBucket: "aquazen-b1a7d.firebasestorage.app",
+    apiKey: 'AIzaSyA1gyoTRui5vyFPifpis8nlJ0IWnBcGjMs',
+    appId: '1:290294089161:android:906ae63e18e75a578cd418',
+    messagingSenderId: '290294089161',
+    projectId: 'aquazen-b1a7d',
+    storageBucket: 'aquazen-b1a7d.firebasestorage.app',
   );
-
   // iOS — à compléter avec GoogleService-Info.plist quand xcodeproj sera installé
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: "AIzaSyA1gyoTRui5vyFPifpis8nlJ0IWnBcGjMs",
