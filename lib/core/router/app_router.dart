@@ -197,16 +197,21 @@ class MainShell extends ConsumerWidget {
 
     return Scaffold(
       body: navigationShell,
-      bottomNavigationBar: OzelBottomNavBar(
-        currentIndex: navigationShell.currentIndex,
-        hasActiveCommande: hasActiveCommande,
-        onTap: (index) {
-          navigationShell.goBranch(
-            index,
-            initialLocation: index == navigationShell.currentIndex,
-          );
-        },
+    return Scaffold(
+      body: navigationShell,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: OzelBottomNavBar(
+          currentIndex: navigationShell.currentIndex,
+          hasActiveCommande: hasActiveCommande,
+          onTap: (index) {
+            debugPrint('[NAV] onTap index=$index currentIndex=${navigationShell.currentIndex}');
+            navigationShell.goBranch(
+              index,
+              initialLocation: index == navigationShell.currentIndex,
+            );
+          },
+        ),
       ),
-    );
-  }
+    );  }
 }
