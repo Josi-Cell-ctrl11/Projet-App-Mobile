@@ -15,7 +15,7 @@ import "../../../shared/widgets/section_card.dart";
 import "../../../shared/widgets/selection_card.dart";
 import "../application/colis_draft_notifier.dart";
 import "../utils/colis_form_validator.dart";
-import "../utils/phone_formatter.dart";
+import "../../../core/utils/formatters.dart";
 
 /// Formulaire Rapid Colis — logique rapport client Mai 2026 :
 /// - Pas de saisie de poids (sera pese par le livreur sur place)
@@ -47,7 +47,10 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
       if (d.pointB.isNotEmpty) _b.text = d.pointB;
       if (d.destinatairePrenom.isNotEmpty) _destPrenom.text = d.destinatairePrenom;
       if (d.destinataireNom.isNotEmpty) _destNom.text = d.destinataireNom;
-      if (d.destinataireTelephone.isNotEmpty) _destTel.text = d.destinataireTelephone;
+      if (d.destinataireTelephone.isNotEmpty) {
+        _destTel.text =
+            formatLocalPhone(phoneLocalFromE164(d.destinataireTelephone));
+      }
       if (d.descriptionCoursier.isNotEmpty)
         _descCoursier.text = d.descriptionCoursier;
     });
@@ -93,7 +96,7 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
     notifier.setPointB(_b.text.trim());
     notifier.setDestinatairePrenom(_destPrenom.text.trim());
     notifier.setDestinataireNom(_destNom.text.trim());
-    notifier.setDestinataireTelephone(_destTel.text.trim());
+    notifier.setDestinataireTelephone(phoneToE164(_destTel.text.trim()));
     notifier.setDescriptionCoursier(_descCoursier.text.trim());
   }
 
@@ -110,7 +113,7 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
       pointB: _b.text,
       destinatairePrenom: _destPrenom.text,
       destinataireNom: _destNom.text,
-      destinataireTelephone: _destTel.text,
+      destinataireTelephone: phoneToE164(_destTel.text),
     );
 
     if (errors['addresses'] != null) {
@@ -297,9 +300,11 @@ class _ColisFormScreenState extends ConsumerState<ColisFormScreen> {
                 OzelTextField(
                   controller: _destTel,
                   label: "Numéro de téléphone du destinataire *",
+                  hint: "0166272826",
+                  prefixText: "+229 ",
                   prefixIcon: Icons.phone_rounded,
                   keyboardType: TextInputType.phone,
-                  inputFormatters: [BeninPhoneFormatter()],
+                  inputFormatters: [PhoneBeninInputFormatter()],
                   onChanged: (_) => _onFieldChanged(),
                 ),
               ],

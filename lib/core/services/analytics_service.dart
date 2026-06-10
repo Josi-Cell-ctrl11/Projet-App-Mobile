@@ -20,18 +20,29 @@ class AnalyticsService {
 
   Future<void> logViewRestaurant(String restaurantId, String name) =>
       _analytics.logViewItem(
-        itemId: restaurantId,
-        itemName: name,
-        itemCategory: "restaurant",
+        currency: "XOF",
+        items: [
+          AnalyticsEventItem(
+            itemId: restaurantId,
+            itemName: name,
+            itemCategory: "restaurant",
+          ),
+        ],
       );
 
   Future<void> logAddToCart(String itemName, double price) =>
       _analytics.logAddToCart(
-        itemId: itemName,
-        itemName: itemName,
-        itemCategory: "food",
-        price: price,
+        value: price,
         currency: "XOF",
+        items: [
+          AnalyticsEventItem(
+            itemId: itemName,
+            itemName: itemName,
+            itemCategory: "food",
+            price: price,
+            currency: "XOF",
+          ),
+        ],
       );
 
   Future<void> logOrderFood(double total) =>
@@ -62,9 +73,14 @@ class AnalyticsService {
 
   Future<void> logViewCircuit(String circuitId, String nom) =>
       _analytics.logViewItem(
-        itemId: circuitId,
-        itemName: nom,
-        itemCategory: "circuit",
+        currency: "XOF",
+        items: [
+          AnalyticsEventItem(
+            itemId: circuitId,
+            itemName: nom,
+            itemCategory: "circuit",
+          ),
+        ],
       );
 
   Future<void> logReservationTour(String circuitNom, double montant) =>

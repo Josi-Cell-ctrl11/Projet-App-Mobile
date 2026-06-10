@@ -17,29 +17,43 @@ class CircuitModel {
   final String id;
   final String nom;
   final String destination;
-
-  /// Duree en jours
   final int dureeJours;
-
-  /// Prix TTC par personne (commission 12% incluse)
   final double prix;
-
-  /// Nom du guide certifie
   final String guide;
   final double note;
   final String description;
-
-  /// Emoji representant la destination
   final String emoji;
-
-  /// Programme jour par jour
   final List<String> programme;
-
   final bool chauffeurInclus;
 
-  /// Assurance incluse si >1 jour
   bool get assuranceIncluse => dureeJours > 1;
-
-  /// Nombre d'avis mock
   int get nbAvis => (note * 10).round();
+
+  Map<String, dynamic> toJson() => {
+        "id": id,
+        "nom": nom,
+        "destination": destination,
+        "dureeJours": dureeJours,
+        "prix": prix,
+        "guide": guide,
+        "note": note,
+        "description": description,
+        "emoji": emoji,
+        "programme": programme,
+        "chauffeurInclus": chauffeurInclus,
+      };
+
+  factory CircuitModel.fromJson(Map<String, dynamic> json) => CircuitModel(
+        id: json["id"] as String? ?? "",
+        nom: json["nom"] as String? ?? "",
+        destination: json["destination"] as String? ?? "",
+        dureeJours: json["dureeJours"] as int? ?? 0,
+        prix: (json["prix"] as num?)?.toDouble() ?? 0,
+        guide: json["guide"] as String? ?? "",
+        note: (json["note"] as num?)?.toDouble() ?? 0,
+        description: json["description"] as String? ?? "",
+        emoji: json["emoji"] as String? ?? "",
+        programme: List<String>.from(json["programme"] as List? ?? []),
+        chauffeurInclus: json["chauffeurInclus"] as bool? ?? true,
+      );
 }

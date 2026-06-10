@@ -167,7 +167,7 @@ class ColisTrackingScreen extends ConsumerWidget {
                               size: 14, color: _darkGray),
                           const SizedBox(width: 4),
                           Text(
-                            "+229 97 00 00 00",
+                            "+229 01 66 27 28 26",
                             style: TextStyle(
                               fontSize: 12,
                               color: AppColors.textSecondary,

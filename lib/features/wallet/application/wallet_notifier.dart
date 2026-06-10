@@ -43,12 +43,24 @@ class WalletNotifier extends Notifier<List<WalletTransaction>> {
     // Mise à jour locale immédiate
     state = [tx, ...state];
 
-    // Persistance Firestore
+    // Persistance Firestore + solde utilisateur
     if (uid != null) {
       try {
         await FirestoreService.instance
             .addWalletTransaction(uid, tx.toJson());
-      } catch (_) {}
+
+        final user = ref.read(authSessionProvider).user;
+        if (user != null) {
+          final delta = type == WalletTxType.credit ? amountFcfa : -amountFcfa;
+          await ref.read(authSessionProvider.notifier).updateUser(
+                user.copyWith(
+                  walletBalanceFcfa: user.walletBalanceFcfa + delta,
+                ),
+              );
+        }
+      } catch (_) {
+        state = state.where((t) => t.id != tx.id).toList();
+      }
     }
   }
 }

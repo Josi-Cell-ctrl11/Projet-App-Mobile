@@ -4,6 +4,7 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:go_router/go_router.dart";
 
 import "../../../core/theme/app_colors.dart";
+import "../../../core/utils/formatters.dart";
 import "../../../shared/models/app_user.dart";
 import "../../../shared/widgets/ozel_button.dart";
 import "../../../shared/widgets/ozel_text_field.dart";
@@ -36,7 +37,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _lastName = TextEditingController(text: user?.lastName ?? "");
     _pseudo = TextEditingController(text: user?.pseudo ?? "");
     _whatsapp = TextEditingController(
-        text: user?.whatsapp.isNotEmpty == true ? user!.whatsapp : "+229");
+      text: user?.whatsapp.isNotEmpty == true
+          ? formatLocalPhone(phoneLocalFromE164(user!.whatsapp))
+          : "",
+    );
     _npi = TextEditingController(text: user?.npi ?? "");
     _email = TextEditingController(text: user?.email ?? "");
   }
@@ -69,7 +73,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       firstName: _firstName.text.trim(),
       lastName: _lastName.text.trim(),
       pseudo: _pseudo.text.trim(),
-      whatsapp: _whatsapp.text.trim(),
+      whatsapp: phoneToE164(_whatsapp.text.trim()),
       npi: npiValue,
       email: _email.text.trim(),
       isProfileComplete: isProfileComplete,
@@ -178,12 +182,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             OzelTextField(
               controller: _whatsapp,
               label: "Numéro WhatsApp",
-              hint: "+229 97 00 00 00",
+              hint: "0166272826",
+              prefixText: "+229 ",
               prefixIcon: Icons.chat_rounded,
               keyboardType: TextInputType.phone,
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r"[+\d]")),
-              ],
+              inputFormatters: [PhoneBeninInputFormatter()],
             ),
             const SizedBox(height: 12),
             OzelTextField(

@@ -17,7 +17,8 @@ abstract final class AppConstants {
 
   /// Système de points Ozel
   static const int pointsParFcfa = 1; // 1 FCFA = 1 point
-  static const int pointsPourLivraisonGratuite = 10; // 10 points = 1 livraison gratuite
+  static const int pointsPourLivraisonGratuite =
+      10000; // 10 000 points = 1 livraison gratuite
   static const double valeurPoint = 1.0; // 1 point = 1 FCFA de réduction
 
   /// Clé FedaPay publique (placeholder — à remplacer par ta clé réelle).

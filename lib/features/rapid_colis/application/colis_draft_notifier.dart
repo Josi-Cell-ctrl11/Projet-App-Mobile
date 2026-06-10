@@ -1,10 +1,8 @@
 import "package:flutter_riverpod/flutter_riverpod.dart";
 
-/// Qui prend en charge les frais de livraison.
-enum PayeurColis { expediteur, destinataire }
+import "../../../shared/models/colis_shipment.dart";
 
-/// Mode d'envoi : colis standard ou coursier universel.
-enum ModeColis { colis, coursier }
+export "../../../shared/models/colis_shipment.dart" show ModeColis, PayeurColis;
 
 /// Brouillon Rapid Colis (saisie formulaire avant devis).
 class ColisDraft {

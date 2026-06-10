@@ -56,6 +56,10 @@ class FirestoreService {
           .orderBy("createdAt", descending: true)
           .snapshots();
 
+  /// Référence document commande food (nouveau ou existant).
+  DocumentReference<Map<String, dynamic>> commandeFoodDoc([String? id]) =>
+      id != null ? commandesFoods.doc(id) : commandesFoods.doc();
+
   /// Ajoute une commande food.
   Future<DocumentReference> addCommandeFood(
           Map<String, dynamic> data) =>

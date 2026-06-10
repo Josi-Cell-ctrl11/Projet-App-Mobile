@@ -10,6 +10,7 @@ import "../../../core/utils/formatters.dart";
 import "../../../core/utils/rapid_colis_pricing.dart";
 import "../../../shared/models/colis_shipment.dart";
 import "../../../shared/widgets/ozel_button.dart";
+import "../../auth/application/auth_session.dart";
 import "../../wallet/application/wallet_notifier.dart";
 import "../application/active_colis_notifier.dart";
 import "../application/colis_draft_notifier.dart";
@@ -43,14 +44,15 @@ class _ColisConfirmScreenState extends ConsumerState<ColisConfirmScreen> {
       weightKg: 1,
     );
 
+    final user = ref.read(authSessionProvider).user;
     setState(() => _loading = true);
     final paid = await lancerPaiementFedaPay(
       context: context,
       montant: price,
       description: "Rapid Colis — ${draft.pointA} → ${draft.pointB}",
-      customerName: "Client Ozel",
-      customerPhone: "",
-      customerEmail: "",
+      customerName: user?.name ?? "Client Ozel",
+      customerPhone: user?.phone ?? "",
+      customerEmail: user?.email ?? "",
     );
     setState(() => _loading = false);
     if (!mounted || !paid) return;

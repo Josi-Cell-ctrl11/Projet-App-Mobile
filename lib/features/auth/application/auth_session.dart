@@ -112,6 +112,7 @@ class AuthSession extends Notifier<AuthSnapshot> {
       await FirebaseAuth.instance.signOut();
     } catch (_) {}
 
+    ref.read(phoneAuthProcessingProvider.notifier).state = false;
     state = state.copyWith(user: null);
   }
 }
@@ -119,3 +120,6 @@ class AuthSession extends Notifier<AuthSnapshot> {
 final authSessionProvider = NotifierProvider<AuthSession, AuthSnapshot>(
   AuthSession.new,
 );
+
+/// Empêche le double traitement auto-vérification OTP / saisie manuelle.
+final phoneAuthProcessingProvider = StateProvider<bool>((ref) => false);

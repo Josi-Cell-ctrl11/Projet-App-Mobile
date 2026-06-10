@@ -1,6 +1,9 @@
+import "package:firebase_auth/firebase_auth.dart";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:go_router/go_router.dart";
+
+import "../core/analytics/app_analytics.dart";
 
 import "../features/auth/presentation/login_screen.dart";
 import "../features/auth/presentation/onboarding_screen.dart";
@@ -41,7 +44,11 @@ import "../features/ozel_tic/presentation/cameras_surveillance_screen.dart";
 import "../features/ozel_tic/presentation/reseaux_screen.dart";
 
 // ── Ozel Tours ────────────────────────────────────────────────────────────────
+import "../features/ozel_tours/presentation/guest_houses_screen.dart";
 import "../features/ozel_tours/presentation/inscription_tourisme_screen.dart";
+import "../features/ozel_tours/presentation/ozel_tours_screen.dart";
+import "../features/ozel_securites/presentation/ozel_securites_screen.dart";
+import "../features/ozel_tic/presentation/ozel_tic_screen.dart";
 
 // ── OzelFoods ─────────────────────────────────────────────────────────────────
 import "../features/ozelfoods/presentation/cart_screen.dart";
@@ -51,6 +58,7 @@ import "../features/ozelfoods/presentation/restaurant_list_screen.dart";
 import "../features/ozelfoods/presentation/restaurant_menu_screen.dart";
 
 import "../features/ozelfoods/presentation/orders_history_screen.dart";
+import "../features/ozelfoods/presentation/table_qrcode_screen.dart";
 import "../features/profile/presentation/edit_profile_screen.dart";
 import "../features/profile/presentation/profile_screen.dart";
 import "../features/rapid_colis/presentation/colis_confirm_screen.dart";
@@ -65,11 +73,32 @@ import "../shared/models/tour_reservation.dart";
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: "root");
 
+Widget _missingDataScreen() => const Scaffold(
+      body: Center(child: Text("Données manquantes")),
+    );
+
 /// Configuration GoRouter — 7 services complets + flux auth.
 final goRouterProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: "/splash",
+    observers: [analyticsObserver],
+    redirect: (context, state) {
+      final loggedIn = FirebaseAuth.instance.currentUser != null;
+      const authRoutes = [
+        "/splash",
+        "/onboarding",
+        "/login",
+        "/register",
+        "/otp",
+      ];
+      final location = state.matchedLocation;
+      final isAuthRoute = authRoutes.any(
+        (route) => location == route || location.startsWith("$route/"),
+      );
+      if (!loggedIn && !isAuthRoute) return "/login";
+      return null;
+    },
     routes: [
       GoRoute(
         path: "/",
@@ -93,6 +122,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               final extra = state.extra as Map?;
               return OtpScreen(
                 phone: extra?["phone"] as String? ?? "",
+                resendToken: extra?["resendToken"] as int?,
               );
             },
           ),
@@ -115,13 +145,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: "/ozel-event/paiement",
-        builder: (_, state) => OzelEventPaiementScreen(
-            data: state.extra as Map<String, dynamic>),
+        builder: (_, state) {
+          final data = state.extra as Map<String, dynamic>?;
+          if (data == null) return _missingDataScreen();
+          return OzelEventPaiementScreen(data: data);
+        },
       ),
       GoRoute(
         path: "/ozel-event/confirmation",
-        builder: (_, state) => OzelEventConfirmationScreen(
-            data: state.extra as Map<String, dynamic>),
+        builder: (_, state) {
+          final data = state.extra as Map<String, dynamic>?;
+          if (data == null) return _missingDataScreen();
+          return OzelEventConfirmationScreen(data: data);
+        },
       ),
       GoRoute(
         path: "/ozel-event/reservations",
@@ -135,13 +171,23 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: "/ozel-tours/circuit/:id",
-        builder: (_, state) => OzelToursCircuitDetailScreen(
-            circuit: state.extra as CircuitModel),
+        builder: (_, state) {
+          final circuit = state.extra as CircuitModel?;
+          if (circuit == null) return _missingDataScreen();
+          return OzelToursCircuitDetailScreen(circuit: circuit);
+        },
       ),
       GoRoute(
         path: "/ozel-tours/reservation",
-        builder: (_, state) => OzelToursReservationScreen(
-            circuit: state.extra as CircuitModel),
+        builder: (_, state) {
+          final circuit = state.extra as CircuitModel?;
+          if (circuit == null) return _missingDataScreen();
+          return OzelToursReservationScreen(circuit: circuit);
+        },
+      ),
+      GoRoute(
+        path: "/ozel-tours/guest-houses",
+        builder: (_, __) => const GuestHousesScreen(),
       ),
       GoRoute(
         path: "/ozel-tours/ebillet",
@@ -214,6 +260,18 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: "/ozel-tours/tourisme",
         builder: (_, __) => const InscriptionTourismeScreen(),
       ),
+      GoRoute(
+        path: "/ozel-tours/legacy",
+        builder: (_, __) => const OzelToursScreen(),
+      ),
+      GoRoute(
+        path: "/ozel-securites/legacy",
+        builder: (_, __) => const OzelSecuritesScreen(),
+      ),
+      GoRoute(
+        path: "/ozel-tic/legacy",
+        builder: (_, __) => const OzelTicScreen(),
+      ),
 
       // ── SHELL (5 onglets) ───────────────────────────────────────────────────
       StatefulShellRoute.indexedStack(
@@ -252,6 +310,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
                 GoRoute(
                   path: "historique",
                   builder: (_, __) => const OrdersHistoryScreen(),
+                ),
+                GoRoute(
+                  path: "qrcode",
+                  builder: (_, state) {
+                    final extra = state.extra as Map<String, dynamic>?;
+                    return TableQrcodeScreen(
+                      commandeId: extra?["commandeId"] as String? ?? "",
+                      restaurantNom: extra?["restaurantNom"] as String? ?? "",
+                      plats: List<String>.from(extra?["plats"] as List? ?? []),
+                      heurePrevue: extra?["heurePrevue"] as String? ?? "",
+                      clientNom: extra?["clientNom"] as String? ?? "",
+                    );
+                  },
                 ),
               ],
             ),

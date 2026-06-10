@@ -418,7 +418,7 @@ class _OzelEventHomeScreenState extends ConsumerState<OzelEventHomeScreen> {
                       inputFormatters: [PhoneBeninInputFormatter()],
                       decoration: const InputDecoration(
                         labelText: 'Numéro WhatsApp *',
-                        hintText: '01 97 90 90 98',
+                        hintText: '0166272826',
                         prefixText: '+229 ',
                         prefixStyle: TextStyle(
                           color: Colors.black87,

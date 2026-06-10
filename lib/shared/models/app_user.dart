@@ -97,17 +97,19 @@ class AppUser {
         ozelPoints: (json["ozelPoints"] as num?)?.toInt() ?? 0,
       );
 
+  static const Object _unset = Object();
+
   AppUser copyWith({
     String? id,
     String? name,
     String? phone,
-    String? email,
+    Object? email = _unset,
     String? firstName,
     String? lastName,
     String? pseudo,
     String? whatsapp,
     String? npi,
-    String? avatarUrl,
+    Object? avatarUrl = _unset,
     bool? isProfileComplete,
     double? walletBalanceFcfa,
     int? ozelPoints,
@@ -116,13 +118,14 @@ class AppUser {
         id: id ?? this.id,
         name: name ?? this.name,
         phone: phone ?? this.phone,
-        email: email ?? this.email,
+        email: identical(email, _unset) ? this.email : email as String?,
         firstName: firstName ?? this.firstName,
         lastName: lastName ?? this.lastName,
         pseudo: pseudo ?? this.pseudo,
         whatsapp: whatsapp ?? this.whatsapp,
         npi: npi ?? this.npi,
-        avatarUrl: avatarUrl ?? this.avatarUrl,
+        avatarUrl:
+            identical(avatarUrl, _unset) ? this.avatarUrl : avatarUrl as String?,
         isProfileComplete: isProfileComplete ?? this.isProfileComplete,
         walletBalanceFcfa: walletBalanceFcfa ?? this.walletBalanceFcfa,
         ozelPoints: ozelPoints ?? this.ozelPoints,

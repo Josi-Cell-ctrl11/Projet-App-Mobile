@@ -1,18 +1,14 @@
 import "dart:ui";
 
-import "package:firebase_analytics/firebase_analytics.dart";
 import "package:firebase_crashlytics/firebase_crashlytics.dart";
 import "package:flutter/material.dart";
 import "package:flutter_localizations/flutter_localizations.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 
+import "core/analytics/app_analytics.dart";
 import "core/notifications/fcm_bootstrap.dart";
 import "core/theme/app_theme.dart";
 import "router/app_router.dart";
-
-/// Instance Analytics globale — accessible depuis toute l'app.
-final analytics = FirebaseAnalytics.instance;
-final analyticsObserver = FirebaseAnalyticsObserver(analytics: analytics);
 
 /// Racine Material + localisation française.
 class OzelApp extends ConsumerWidget {

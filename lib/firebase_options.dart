@@ -30,14 +30,14 @@ class DefaultFirebaseOptions {
     projectId: 'aquazen-b1a7d',
     storageBucket: 'aquazen-b1a7d.firebasestorage.app',
   );
-  // iOS — à compléter avec GoogleService-Info.plist quand xcodeproj sera installé
+  // iOS/macOS/web — exécuter `flutterfire configure` pour remplacer les appId placeholder.
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: "AIzaSyA1gyoTRui5vyFPifpis8nlJ0IWnBcGjMs",
     appId: "1:290294089161:ios:000000000000000",
     messagingSenderId: "290294089161",
     projectId: "aquazen-b1a7d",
     storageBucket: "aquazen-b1a7d.firebasestorage.app",
-    iosBundleId: "com.example.ozelservices",
+    iosBundleId: "bj.ozelservices.client",
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -46,7 +46,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: "290294089161",
     projectId: "aquazen-b1a7d",
     storageBucket: "aquazen-b1a7d.firebasestorage.app",
-    iosBundleId: "com.example.ozelservices",
+    iosBundleId: "bj.ozelservices.client",
   );
 
   static const FirebaseOptions web = FirebaseOptions(

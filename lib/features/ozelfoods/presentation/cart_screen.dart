@@ -8,6 +8,7 @@ import "../../../core/utils/food_business_rules.dart";
 import "../../../core/utils/formatters.dart";
 import "../../../shared/widgets/ozel_button.dart";
 import "../../../shared/widgets/price_tag.dart";
+import "../../auth/application/auth_session.dart";
 import "../application/cart_notifier.dart";
 
 /// Panier : récap, frais de livraison mock, total.
@@ -19,7 +20,8 @@ class CartScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lines = ref.watch(cartProvider);
-    final subtotal = ref.read(cartProvider.notifier).subtotal;
+    final subtotal =
+        lines.fold<double>(0, (sum, line) => sum + line.lineTotal);
     final total = subtotal + deliveryFeeFcfa;
     final meets = FoodBusinessRules.meetsMinimumOrder(
       subtotal,
@@ -158,7 +160,7 @@ class CartScreen extends ConsumerWidget {
                         OzelPrimaryButton(
                           label: "Commander",
                           enabled: meets,
-                          onPressed: () => _showOrderTypeBottomSheet(context),
+                          onPressed: () => _showOrderTypeBottomSheet(context, ref),
                         ),
                       ],
                     ),
@@ -169,7 +171,7 @@ class CartScreen extends ConsumerWidget {
     );
   }
 
-  void _showOrderTypeBottomSheet(BuildContext context) {
+  void _showOrderTypeBottomSheet(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -199,7 +201,7 @@ class CartScreen extends ConsumerWidget {
               subtitle: "Je viens au restaurant avec mon QR code",
               onTap: () {
                 Navigator.pop(ctx);
-                _showSurPlaceDialog(context);
+                _showSurPlaceDialog(context, ref);
               },
             ),
             const SizedBox(height: 12),
@@ -220,7 +222,7 @@ class CartScreen extends ConsumerWidget {
     );
   }
 
-  void _showSurPlaceDialog(BuildContext context) {
+  void _showSurPlaceDialog(BuildContext context, WidgetRef ref) {
     final TextEditingController heureCtrl = TextEditingController();
     showDialog(
       context: context,
@@ -246,12 +248,22 @@ class CartScreen extends ConsumerWidget {
           ),
           FilledButton(
             onPressed: () {
+              final user = ref.read(authSessionProvider).user;
+              final plats = ref.read(cartProvider).map((l) => l.item.name).toList();
+              final restaurant = ref.read(cartProvider).isNotEmpty
+                  ? ref.read(cartProvider).first.restaurantName
+                  : "";
               Navigator.pop(ctx);
-              // TODO: Generate QR code and navigate to table_qrcode_screen
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("QR code généré (mock)"),
-                ),
+              context.push(
+                "/ozelfoods/qrcode",
+                extra: {
+                  "commandeId":
+                      "CMD-${DateTime.now().millisecondsSinceEpoch}",
+                  "restaurantNom": restaurant,
+                  "plats": plats,
+                  "heurePrevue": heureCtrl.text,
+                  "clientNom": user?.displayName ?? "Client Ozel",
+                },
               );
             },
             child: const Text("Confirmer"),

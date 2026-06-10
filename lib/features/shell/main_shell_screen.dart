@@ -1,11 +1,13 @@
 import "package:flutter/material.dart";
+import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:go_router/go_router.dart";
 
 import "../../core/theme/app_colors.dart";
+import "../ozelfoods/application/cart_notifier.dart";
 
 /// Coque principale : bottom nav 5 onglets avec badges de notification.
 /// PopScope intercepte le bouton retour Android → revient au dashboard.
-class MainShellScreen extends StatelessWidget {
+class MainShellScreen extends ConsumerWidget {
   const MainShellScreen({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
@@ -18,7 +20,8 @@ class MainShellScreen extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cartCount = ref.watch(cartProvider).length;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -62,7 +65,7 @@ class MainShellScreen extends StatelessWidget {
                     icon: Icons.restaurant_outlined,
                     activeIcon: Icons.restaurant_menu_rounded,
                     label: "OzelFoods",
-                    badgeCount: 2,
+                    badgeCount: cartCount,
                     onTap: _onTap,
                   ),
                   _NavItem(

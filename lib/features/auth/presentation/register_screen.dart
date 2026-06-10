@@ -7,6 +7,7 @@ import "package:uuid/uuid.dart";
 
 import "../../../core/theme/app_colors.dart";
 import "../../../core/utils/formatters.dart";
+import "../../../core/utils/local_file_image.dart";
 import "../../../shared/models/app_user.dart";
 import "../../../shared/widgets/ozel_button.dart";
 import "../../../shared/widgets/ozel_text_field.dart";
@@ -187,9 +188,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 CircleAvatar(
                   radius: 50,
                   backgroundColor: AppColors.primary.withValues(alpha: 0.12),
-                  backgroundImage: _avatarPath != null
-                      ? null
-                      : null,
+                  backgroundImage: localFileImage(_avatarPath),
                   child: _avatarPath == null
                       ? const Icon(
                           Icons.person_rounded,
@@ -306,7 +305,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         OzelTextField(
           controller: _phone,
           label: "Telephone *",
-          hint: "01 97 90 90 98",
+          hint: "0166272826",
           prefixText: "+229 ",
           keyboardType: TextInputType.phone,
           prefixIcon: Icons.phone_android_rounded,
@@ -319,7 +318,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         OzelTextField(
           controller: _whatsapp,
           label: "WhatsApp *",
-          hint: "01 97 90 90 98",
+          hint: "0166272826",
           prefixText: "+229 ",
           keyboardType: TextInputType.phone,
           prefixIcon: Icons.chat_rounded,

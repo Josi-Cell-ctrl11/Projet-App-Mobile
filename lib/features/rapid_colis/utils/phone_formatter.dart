@@ -1,6 +1,7 @@
 import "package:flutter/services.dart";
 
-/// Formatter pour les numéros de téléphone béninois (+229)
+/// Formatter pour les numéros de téléphone béninois **avec +229 inclus** (Rapid Colis).
+/// Limite : +229 + 8 chiffres. Pour l'auth sans +229, utiliser [PhoneBeninInputFormatter].
 class BeninPhoneFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
@@ -18,9 +19,9 @@ class BeninPhoneFormatter extends TextInputFormatter {
       }
     }
 
-    // Limiter à 14 caractères (+229 + 9 chiffres)
-    if (text.length > 14) {
-      text = text.substring(0, 14);
+    // Limiter à 12 caractères (+229 + 8 chiffres)
+    if (text.length > 12) {
+      text = text.substring(0, 12);
     }
 
     return newValue.copyWith(

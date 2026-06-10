@@ -194,7 +194,7 @@ class _OzelSecuritesJardinageScreenState
           OzelTextField(
             controller: _whatsapp,
             label: 'WhatsApp *',
-            hint: '01 97 90 90 98',
+            hint: '0166272826',
             prefixText: '+229 ',
             prefixIcon: Icons.chat_rounded,
             keyboardType: TextInputType.phone,

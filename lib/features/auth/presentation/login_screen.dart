@@ -5,8 +5,10 @@ import "package:go_router/go_router.dart";
 
 import "../../../core/theme/app_colors.dart";
 import "../../../core/utils/formatters.dart";
+import "../../../shared/models/app_user.dart";
 import "../../../shared/widgets/ozel_button.dart";
 import "../../../shared/widgets/ozel_text_field.dart";
+import "../application/auth_session.dart";
 
 /// Connexion : téléphone → SMS OTP via Firebase Auth.
 class LoginScreen extends ConsumerStatefulWidget {
@@ -29,7 +31,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _envoyerCode() async {
     final numero = "+229${_phone.text.replaceAll(' ', '').trim()}";
-    if (numero.length < 13) {
+    if (numero.length < 14) {
       setState(() => _error = "Numéro incomplet");
       return;
     }
@@ -39,8 +41,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       phoneNumber: numero,
       timeout: const Duration(seconds: 60),
       verificationCompleted: (PhoneAuthCredential credential) async {
-        // Auto-vérification Android (SMS intercepté automatiquement)
-        await FirebaseAuth.instance.signInWithCredential(credential);
+        if (ref.read(phoneAuthProcessingProvider)) return;
+        ref.read(phoneAuthProcessingProvider.notifier).state = true;
+
+        final userCredential =
+            await FirebaseAuth.instance.signInWithCredential(credential);
+        if (!mounted) return;
+
+        final uid = userCredential.user?.uid ?? "";
+        final phone = userCredential.user?.phoneNumber ?? numero;
+        final user = AppUser(
+          id: uid,
+          name: "Client Ozel",
+          phone: phone,
+          email: "",
+          walletBalanceFcfa: 0,
+          ozelPoints: 0,
+        );
+        await ref.read(authSessionProvider.notifier).saveUser(user);
         if (!mounted) return;
         context.go("/accueil");
       },
@@ -55,6 +73,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         context.push("/login/otp", extra: {
           "phone": numero,
           "verificationId": verificationId,
+          "resendToken": resendToken,
         });
       },
       codeAutoRetrievalTimeout: (String verificationId) {},
@@ -121,7 +140,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             OzelTextField(
               controller: _phone,
               label: "Téléphone",
-              hint: "01 97 90 90 98",
+              hint: "0166272826",
               prefixText: "+229 ",
               keyboardType: TextInputType.phone,
               prefixIcon: Icons.phone_android_rounded,

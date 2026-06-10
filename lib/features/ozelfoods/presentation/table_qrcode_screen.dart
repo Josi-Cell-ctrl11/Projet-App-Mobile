@@ -126,7 +126,7 @@ class _TableQrcodeScreenState extends ConsumerState<TableQrcodeScreen> {
             Row(
               children: [
                 Expanded(
-                  child: OzelSecondaryButton(
+                  child: OzelOutlinedButton(
                     label: "Partager",
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(

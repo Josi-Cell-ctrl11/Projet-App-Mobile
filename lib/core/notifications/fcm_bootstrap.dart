@@ -57,6 +57,11 @@ Future<void> _saveFcmToken(String? token) async {
   final uid = FirebaseAuth.instance.currentUser?.uid;
   if (uid == null) return;
   try {
+    final existing = await FirestoreService.instance.getUser(uid);
+    if (existing == null) {
+      debugPrint("Profil absent — token FCM non sauvegardé pour $uid");
+      return;
+    }
     await FirestoreService.instance.saveUser({"fcmToken": token}, uid);
   } catch (e) {
     debugPrint("Erreur sauvegarde token FCM : $e");

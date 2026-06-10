@@ -1,6 +1,5 @@
 import "dart:async";
 
-import "package:cloud_firestore/cloud_firestore.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 
 import "../../../core/services/firestore_service.dart";
@@ -24,9 +23,8 @@ final foodOrdersStreamProvider =
 /// Provider d'une commande précise en temps réel.
 final foodOrderLiveProvider =
     StreamProvider.family<FoodOrder?, String>((ref, orderId) {
-  return FirebaseFirestore.instance
-      .collection("commandes_foods")
-      .doc(orderId)
+  return FirestoreService.instance
+      .commandeFoodDoc(orderId)
       .snapshots()
       .map((snap) {
     if (!snap.exists || snap.data() == null) return null;
@@ -47,7 +45,7 @@ class FoodOrdersNotifier extends Notifier<List<FoodOrder>> {
     bool restaurantAccepted = true,
     int lateMinutes = 0,
   }) async {
-    final docRef = FirebaseFirestore.instance.collection("commandes_foods").doc();
+    final docRef = FirestoreService.instance.commandeFoodDoc();
 
     final order = FoodOrder(
       id: docRef.id,

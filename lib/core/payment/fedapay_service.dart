@@ -60,9 +60,17 @@ class FedaPayService {
   static const bool _isLive = false;
 
   static const String _secretKey =
-      "sk_sandbox_232-RxhzW_2fnUdZ2RyK_fB8";
+      String.fromEnvironment("FEDAPAY_SECRET_KEY");
 
   static String get _baseUrl => _isLive ? _liveUrl : _sandboxUrl;
+
+  static void _ensureSecretKey() {
+    if (_secretKey.isEmpty) {
+      throw StateError(
+        "FEDAPAY_SECRET_KEY manquante. Passez --dart-define=FEDAPAY_SECRET_KEY=...",
+      );
+    }
+  }
 
   final _dio = Dio();
 
@@ -74,6 +82,7 @@ class FedaPayService {
     required String customerPhone,
     required String customerName,
   }) async {
+    _ensureSecretKey();
     try {
       final response = await _dio.post(
         "$_baseUrl/transactions",
@@ -105,8 +114,10 @@ class FedaPayService {
         }),
       );
 
-      final txId =
-          response.data["v1/transaction"]["id"]?.toString() ?? "";
+      final txData = response.data["v1/transaction"] ??
+          response.data["data"] ??
+          response.data["transaction"];
+      final txId = txData?["id"]?.toString() ?? "";
 
       // Générer le lien de paiement
       final tokenResponse = await _dio.post(
@@ -141,6 +152,7 @@ class FedaPayService {
 
   /// Vérifie le statut d'une transaction.
   Future<bool> checkTransactionStatus(String transactionId) async {
+    _ensureSecretKey();
     try {
       final response = await _dio.get(
         "$_baseUrl/transactions/$transactionId",
@@ -148,8 +160,10 @@ class FedaPayService {
           headers: {"Authorization": "Bearer $_secretKey"},
         ),
       );
-      final status =
-          response.data["v1/transaction"]["status"]?.toString() ?? "";
+      final txData = response.data["v1/transaction"] ??
+          response.data["data"] ??
+          response.data["transaction"];
+      final status = txData?["status"]?.toString() ?? "";
       return status == "approved";
     } catch (_) {
       return false;

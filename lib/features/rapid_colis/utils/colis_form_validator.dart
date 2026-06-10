@@ -21,8 +21,9 @@ class ColisFormValidator {
     if (!telephone.trim().startsWith('+229')) {
       return "Le téléphone doit commencer par +229.";
     }
-    if (telephone.trim().length < 12) {
-      return "Le numéro de téléphone est invalide.";
+    final digits = telephone.replaceAll(RegExp(r"[^\d]"), "");
+    if (digits.length != 13) {
+      return "Le numéro doit contenir 10 chiffres après +229";
     }
     return null;
   }

@@ -1,4 +1,8 @@
-import "package:ozelservices/features/rapid_colis/application/colis_draft_notifier.dart";
+/// Qui prend en charge les frais de livraison.
+enum PayeurColis { expediteur, destinataire }
+
+/// Mode d'envoi : colis standard ou coursier universel.
+enum ModeColis { colis, coursier }
 
 /// Expedition Rapid Colis (formulaire + suivi).
 class ColisShipment {
@@ -22,25 +26,15 @@ class ColisShipment {
   final String id;
   final String pointA;
   final String pointB;
-
-  /// Poids confirme par le livreur apres pesee sur place.
   final double weightKg;
-
   final double distanceKm;
   final double priceFcfa;
   final String? photoPath;
-
-  /// Qui paie les frais de livraison.
   final PayeurColis payeur;
-
   final String destinatairePrenom;
   final String destinataireNom;
   final String destinataireTelephone;
-
-  /// Mode : colis standard ou coursier universel.
   final ModeColis mode;
-
-  /// Position mock du livreur pour la carte de suivi.
   final double? driverLat;
   final double? driverLng;
 
@@ -65,5 +59,43 @@ class ColisShipment {
         mode: mode,
         driverLat: driverLat ?? this.driverLat,
         driverLng: driverLng ?? this.driverLng,
+      );
+
+  Map<String, dynamic> toJson() => {
+        "id": id,
+        "pointA": pointA,
+        "pointB": pointB,
+        "weightKg": weightKg,
+        "distanceKm": distanceKm,
+        "priceFcfa": priceFcfa,
+        "photoPath": photoPath,
+        "payeur": payeur.name,
+        "destinatairePrenom": destinatairePrenom,
+        "destinataireNom": destinataireNom,
+        "destinataireTelephone": destinataireTelephone,
+        "mode": mode.name,
+        "driverLat": driverLat,
+        "driverLng": driverLng,
+      };
+
+  factory ColisShipment.fromJson(Map<String, dynamic> json) => ColisShipment(
+        id: json["id"] as String? ?? "",
+        pointA: json["pointA"] as String? ?? "",
+        pointB: json["pointB"] as String? ?? "",
+        weightKg: (json["weightKg"] as num?)?.toDouble() ?? 0,
+        distanceKm: (json["distanceKm"] as num?)?.toDouble() ?? 0,
+        priceFcfa: (json["priceFcfa"] as num?)?.toDouble() ?? 0,
+        photoPath: json["photoPath"] as String?,
+        payeur: PayeurColis.values.byName(
+          json["payeur"] as String? ?? PayeurColis.expediteur.name,
+        ),
+        destinatairePrenom: json["destinatairePrenom"] as String? ?? "",
+        destinataireNom: json["destinataireNom"] as String? ?? "",
+        destinataireTelephone: json["destinataireTelephone"] as String? ?? "",
+        mode: ModeColis.values.byName(
+          json["mode"] as String? ?? ModeColis.colis.name,
+        ),
+        driverLat: (json["driverLat"] as num?)?.toDouble(),
+        driverLng: (json["driverLng"] as num?)?.toDouble(),
       );
 }
