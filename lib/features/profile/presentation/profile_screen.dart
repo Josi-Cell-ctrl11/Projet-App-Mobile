@@ -53,14 +53,6 @@ class ProfileScreen extends ConsumerWidget {
                         value: user?.lastName.isNotEmpty == true
                             ? user!.lastName
                             : "—",
-                      ),
-                      _Row(
-                        icon: Icons.alternate_email_rounded,
-                        iconColor: const Color(0xFF6A1B9A),
-                        label: "Pseudo",
-                        value: user?.pseudo.isNotEmpty == true
-                            ? "@${user!.pseudo}"
-                            : "—",
                         isLast: true,
                       ),
                     ],
@@ -296,16 +288,6 @@ class _StatsRow extends StatelessWidget {
               color: AppColors.black,
             ),
           ),
-          if (user?.pseudo.isNotEmpty == true) ...[
-            const SizedBox(height: 2),
-            Text(
-              "@${user!.pseudo}",
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
           const SizedBox(height: 20),
           // Stat points
           Row(

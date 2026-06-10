@@ -15,6 +15,7 @@ class OzelTextField extends StatelessWidget {
     this.prefixIcon,
     this.prefixText,
     this.maxLines = 1,
+    this.maxLength,
     this.onChanged,
     this.inputFormatters,
   });
@@ -27,6 +28,7 @@ class OzelTextField extends StatelessWidget {
   final IconData? prefixIcon;
   final String? prefixText;
   final int maxLines;
+  final int? maxLength;
   final ValueChanged<String>? onChanged;
   final List<TextInputFormatter>? inputFormatters;
 
@@ -37,6 +39,7 @@ class OzelTextField extends StatelessWidget {
       keyboardType: keyboardType,
       obscureText: obscure,
       maxLines: obscure ? 1 : maxLines,
+      maxLength: maxLength,
       onChanged: onChanged,
       inputFormatters: inputFormatters,
       decoration: InputDecoration(
