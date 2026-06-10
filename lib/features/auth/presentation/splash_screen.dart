@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../domain/auth_provider.dart';
 
-/// Écran de démarrage affiché au lancement de l'application
+/// Écran de démarrage — attend la fin de la vérification Firebase avant de rediriger.
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -18,11 +18,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
   late Animation<double> _scaleAnim;
+  bool _redirected = false;
 
   @override
   void initState() {
     super.initState();
-    // Animation d'entrée du logo
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
@@ -34,9 +34,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       CurvedAnimation(parent: _animController, curve: Curves.elasticOut),
     );
     _animController.forward();
-
-    // Redirection après 2 secondes selon la session
-    Future.delayed(const Duration(seconds: 2), _redirect);
   }
 
   @override
@@ -46,7 +43,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   void _redirect() {
-    if (!mounted) return;
+    if (_redirected || !mounted) return;
+    _redirected = true;
     final authState = ref.read(authProvider);
     if (authState.isAuthenticated) {
       context.go('/home/dashboard');
@@ -57,6 +55,22 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Écouter l'état auth — rediriger dès que le chargement est terminé
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (!next.isLoading) {
+        // Délai minimal pour l'animation
+        Future.delayed(const Duration(milliseconds: 500), _redirect);
+      }
+    });
+
+    // Si déjà résolu au premier build (session en cache)
+    final authState = ref.read(authProvider);
+    if (!authState.isLoading && !_redirected) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Future.delayed(const Duration(milliseconds: 500), _redirect);
+      });
+    }
+
     return Scaffold(
       backgroundColor: AppColors.kPrimaryOrange,
       body: Center(
@@ -67,7 +81,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo OZELSERVICES
                 Container(
                   width: 100,
                   height: 100,
