@@ -32,7 +32,17 @@ class FirestoreProfilRepository implements IProfilRepository {
     final uid = _uid;
     final doc = await _col.doc(uid).get();
     if (!doc.exists || doc.data() == null) {
-      throw Exception('Profil introuvable');
+      return Livreur(
+        id: uid,
+        nom: '',
+        prenom: '',
+        telephone: _auth.currentUser?.phoneNumber ?? '',
+        typeVehicule: TypeVehicule.moto,
+        note: 5.0,
+        totalLivraisons: 0,
+        estEnLigne: false,
+        documents: const [],
+      );
     }
     return Livreur.fromJson({'id': uid, ...doc.data()!});
   }

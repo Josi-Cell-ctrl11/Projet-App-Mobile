@@ -33,10 +33,11 @@ class FirestoreCommandesRepository implements ICommandesRepository {
   Future<List<Commande>> getCommandesDisponibles() async {
     final snap = await _col
         .where('statut', isEqualTo: StatutCommande.disponible.name)
-        .orderBy('createdAt', descending: false)
         .get();
 
-    return snap.docs.map((d) => _fromFirestore(d)).toList();
+    final commandes = snap.docs.map((d) => _fromFirestore(d)).toList()
+      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    return commandes;
   }
 
   @override

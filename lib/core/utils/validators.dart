@@ -1,18 +1,20 @@
 // Validateurs de l'application OZELSERVICES Livreur
 import '../constants/app_strings.dart';
 
-/// Valide un numéro de téléphone béninois (+229 suivi de 8 chiffres)
+/// Valide un numéro de téléphone béninois (+229 suivi de 10 chiffres).
 /// Retourne null si valide, un message d'erreur sinon.
 String? validatePhoneBenin(String? value) {
   if (value == null || value.trim().isEmpty) {
     return AppStrings.numeroInvalide;
   }
-  // Accepte +229 suivi de exactement 8 chiffres (ex: +22997112233)
-  final regex = RegExp(r'^\+229\d{8}$');
-  if (!regex.hasMatch(value.trim())) {
-    return AppStrings.numeroInvalide;
+  final digits = value.replaceAll(RegExp(r'\D'), '');
+  if (digits.startsWith('229')) {
+    return digits.length == 13 ? null : AppStrings.numeroInvalide;
   }
-  return null;
+  if (digits.length == 10 && digits.startsWith('01')) {
+    return null;
+  }
+  return AppStrings.numeroInvalide;
 }
 
 /// Valide un code OTP (6 chiffres)

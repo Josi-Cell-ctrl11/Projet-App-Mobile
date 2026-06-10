@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/phone_formatter.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../shared/widgets/ozel_button.dart';
@@ -136,7 +137,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Un code a été envoyé au\n${widget.phone}',
+                'Un code à 6 chiffres a été envoyé au\n${formatPhoneDisplay(widget.phone)}',
                 style: const TextStyle(
                   fontSize: 14,
                   color: AppColors.kTextSecondary,

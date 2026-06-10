@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/utils/phone_formatter.dart';
 import '../../../core/utils/validators.dart';
 import '../../../shared/widgets/ozel_button.dart';
 import '../../../shared/widgets/ozel_text_field.dart';
@@ -21,7 +22,7 @@ class RetraitBottomSheet extends ConsumerStatefulWidget {
 }
 
 class _RetraitBottomSheetState extends ConsumerState<RetraitBottomSheet> {
-  final _momoController = TextEditingController(text: '+229');
+  final _momoController = TextEditingController();
   final _montantController = TextEditingController();
   String? _momoError;
   String? _montantError;
@@ -40,7 +41,8 @@ class _RetraitBottomSheetState extends ConsumerState<RetraitBottomSheet> {
 
   void _valider() {
     // Validation numéro MoMo
-    final momoError = validatePhoneBenin(_momoController.text.trim());
+    final momoPhone = phoneToE164(_momoController.text.trim());
+    final momoError = validatePhoneBenin(momoPhone);
     // Validation montant
     final montantError =
         validateMontantRetrait(_montantSaisi, widget.soldeDisponible);
@@ -58,7 +60,7 @@ class _RetraitBottomSheetState extends ConsumerState<RetraitBottomSheet> {
     setState(() => _isLoading = true);
     try {
       await ref.read(gainsProvider.notifier).demanderRetrait(
-            _momoController.text.trim(),
+            phoneToE164(_momoController.text.trim()),
             _montantSaisi!,
           );
       if (!mounted) return;
@@ -128,15 +130,14 @@ class _RetraitBottomSheetState extends ConsumerState<RetraitBottomSheet> {
             // Numéro MoMo
             OzelTextField(
               label: AppStrings.numeromomo,
-              hint: '+229XXXXXXXX',
+              hint: '0166272826',
               controller: _momoController,
               keyboardType: TextInputType.phone,
               errorText: _momoError,
+              prefixText: '+229 ',
               prefixIcon: const Icon(Icons.phone_android,
                   color: AppColors.kPrimaryOrange),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[+\d]')),
-              ],
+              inputFormatters: [PhoneBeninInputFormatter()],
               onChanged: (_) => setState(() => _momoError = null),
             ),
             const SizedBox(height: 16),

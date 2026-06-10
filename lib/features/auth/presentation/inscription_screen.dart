@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/phone_formatter.dart';
 import '../../../shared/models/livreur.dart';
 import '../../../shared/widgets/ozel_button.dart';
 import '../../../shared/widgets/ozel_text_field.dart';
@@ -253,7 +254,9 @@ class _Etape1State extends State<_Etape1> {
     _prenomCtrl = TextEditingController(text: widget.data.prenom);
     _nomCtrl = TextEditingController(text: widget.data.nom);
     _telCtrl = TextEditingController(
-      text: widget.data.telephone.isEmpty ? '+229' : widget.data.telephone,
+      text: widget.data.telephone.isEmpty
+          ? ''
+          : formatLocalPhone(phoneLocalFromE164(widget.data.telephone)),
     );
   }
 
@@ -300,15 +303,14 @@ class _Etape1State extends State<_Etape1> {
         const SizedBox(height: 16),
         OzelTextField(
           label: 'Numéro de téléphone',
-          hint: '+229 97 00 00 00',
+          hint: '0166272826',
           controller: _telCtrl,
           keyboardType: TextInputType.phone,
+          prefixText: '+229 ',
           prefixIcon: const Icon(Icons.phone, color: AppColors.kPrimaryOrange),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'[+\d]')),
-          ],
+          inputFormatters: [PhoneBeninInputFormatter()],
           onChanged: (v) {
-            widget.data.telephone = v;
+            widget.data.telephone = phoneToE164(v);
             widget.onChanged();
           },
         ),
@@ -602,7 +604,9 @@ class _Etape3State extends State<_Etape3> {
               ),
               _RecapLigne(
                 label: 'Téléphone',
-                valeur: widget.data.telephone.isEmpty ? '—' : widget.data.telephone,
+                valeur: widget.data.telephone.isEmpty
+                    ? '—'
+                    : formatPhoneDisplay(widget.data.telephone),
               ),
               _RecapLigne(
                 label: 'Véhicule',

@@ -16,7 +16,7 @@ class AppStrings {
   static const String connexion = 'Connexion';
   static const String deconnexion = 'Déconnexion';
   static const String numeroDeTelephone = 'Numéro de téléphone';
-  static const String entrezVotreNumero = 'Entrez votre numéro (+229...)';
+  static const String entrezVotreNumero = '0166272826';
   static const String envoyerCode = 'Envoyer le code';
   static const String codeOtp = 'Code OTP';
   static const String entrezCodeOtp = 'Entrez le code à 6 chiffres';

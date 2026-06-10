@@ -15,6 +15,7 @@ class OzelTextField extends StatelessWidget {
   final int? maxLength;
   final int maxLines;
   final Widget? prefixIcon;
+  final String? prefixText;
   final Widget? suffixIcon;
   final ValueChanged<String>? onChanged;
   final VoidCallback? onTap;
@@ -36,6 +37,7 @@ class OzelTextField extends StatelessWidget {
     this.maxLength,
     this.maxLines = 1,
     this.prefixIcon,
+    this.prefixText,
     this.suffixIcon,
     this.onChanged,
     this.onTap,
@@ -85,6 +87,12 @@ class OzelTextField extends StatelessWidget {
             hintText: hint,
             errorText: errorText,
             prefixIcon: prefixIcon,
+            prefixText: prefixText,
+            prefixStyle: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.kTextPrimary,
+            ),
             suffixIcon: suffixIcon,
             counterText: '',
             filled: true,

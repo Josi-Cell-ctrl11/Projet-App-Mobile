@@ -1,4 +1,4 @@
-package com.example.ozelservices_livreur
+package bj.ozelservices.livreur
 
 import io.flutter.embedding.android.FlutterActivity
 

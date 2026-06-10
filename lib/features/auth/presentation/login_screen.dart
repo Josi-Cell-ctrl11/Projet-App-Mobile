@@ -1,10 +1,10 @@
 // Écran de connexion livreur — saisie du numéro de téléphone
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/utils/phone_formatter.dart';
 import '../../../core/utils/validators.dart';
 import '../../../shared/widgets/ozel_button.dart';
 import '../../../shared/widgets/ozel_text_field.dart';
@@ -20,7 +20,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _phoneController = TextEditingController(text: '+229');
+  final _phoneController = TextEditingController();
   String? _phoneError;
 
   @override
@@ -30,15 +30,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _submit() async {
-    // Validation inline sans requête si format invalide
-    final error = validatePhoneBenin(_phoneController.text.trim());
+    final phone = phoneToE164(_phoneController.text.trim());
+    final error = validatePhoneBenin(phone);
     if (error != null) {
       setState(() => _phoneError = error);
       return;
     }
     setState(() => _phoneError = null);
 
-    await ref.read(authProvider.notifier).sendOtp(_phoneController.text.trim());
+    await ref.read(authProvider.notifier).sendOtp(phone);
 
     if (!mounted) return;
     final authState = ref.read(authProvider);
@@ -50,8 +50,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ),
       );
     } else {
-      // Naviguer vers l'écran OTP
-      context.push('/otp?phone=${Uri.encodeComponent(_phoneController.text.trim())}');
+      context.push('/otp?phone=${Uri.encodeComponent(phone)}');
     }
   }
 
@@ -71,7 +70,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 40),
-                // En-tête
                 Center(
                   child: Column(
                     children: [
@@ -131,20 +129,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                // Champ téléphone
                 OzelTextField(
                   label: AppStrings.numeroDeTelephone,
-                  hint: AppStrings.entrezVotreNumero,
+                  hint: '0166272826',
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
                   errorText: _phoneError,
+                  prefixText: '+229 ',
                   prefixIcon: const Icon(
                     Icons.phone,
                     color: AppColors.kPrimaryOrange,
                   ),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[+\d]')),
-                  ],
+                  inputFormatters: [PhoneBeninInputFormatter()],
                   onChanged: (_) {
                     if (_phoneError != null) {
                       setState(() => _phoneError = null);
@@ -155,14 +151,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Format : +229 suivi de 8 chiffres',
+                  'Un code SMS à 6 chiffres vous sera envoyé',
                   style: TextStyle(
                     fontSize: 12,
                     color: AppColors.kTextSecondary,
                   ),
                 ),
                 const SizedBox(height: 32),
-                // Bouton envoyer
                 OzelButton(
                   label: AppStrings.envoyerCode,
                   onPressed: isLoading ? null : _submit,
@@ -170,7 +165,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   icon: Icons.send,
                 ),
                 const SizedBox(height: 24),
-                // Lien inscription
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -193,34 +187,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 24),
-                // Note MVP
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.kPrimaryOrange.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: AppColors.kPrimaryOrange.withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.info_outline,
-                          color: AppColors.kPrimaryOrange, size: 16),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'MVP : utilisez +22997112233 et le code 123456',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.kPrimaryOrange,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ],
             ),

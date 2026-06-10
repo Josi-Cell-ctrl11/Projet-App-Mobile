@@ -5,27 +5,29 @@ import 'package:ozelservices_livreur/core/utils/validators.dart';
 void main() {
   group('validatePhoneBenin', () {
     test('accepte un numéro béninois valide', () {
-      expect(validatePhoneBenin('+22997112233'), isNull);
-      expect(validatePhoneBenin('+22996001122'), isNull);
-      expect(validatePhoneBenin('+22990000000'), isNull);
+      expect(validatePhoneBenin('+2290166272826'), isNull);
+      expect(validatePhoneBenin('+2299711223300'), isNull);
+      expect(validatePhoneBenin('0166272826'), isNull);
     });
 
     test('rejette un numéro trop court', () {
       expect(validatePhoneBenin('+2299711223'), isNotNull);
+      expect(validatePhoneBenin('016627282'), isNotNull);
     });
 
     test('rejette un numéro trop long', () {
-      expect(validatePhoneBenin('+229971122334'), isNotNull);
+      expect(validatePhoneBenin('+22997112233400'), isNotNull);
+      expect(validatePhoneBenin('01662728261'), isNotNull);
     });
 
     test('rejette un mauvais préfixe', () {
       expect(validatePhoneBenin('+33612345678'), isNotNull);
+      expect(validatePhoneBenin('9711223300'), isNotNull);
       expect(validatePhoneBenin('0612345678'), isNotNull);
     });
 
     test('rejette des caractères non numériques', () {
       expect(validatePhoneBenin('+229971122AB'), isNotNull);
-      expect(validatePhoneBenin('+229 97 11 22'), isNotNull);
     });
 
     test('rejette une valeur vide ou null', () {

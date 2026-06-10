@@ -95,28 +95,45 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
 
       // ── Shell avec BottomNavigationBar persistante ──────────────────────
-      ShellRoute(
-        builder: (context, state, child) => MainShell(child: child),
-        routes: [
-          GoRoute(
-            path: '/home/dashboard',
-            name: 'dashboard',
-            builder: (context, state) => const DashboardScreen(),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            MainShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home/dashboard',
+                name: 'dashboard',
+                builder: (context, state) => const DashboardScreen(),
+              ),
+            ],
           ),
-          GoRoute(
-            path: '/home/commandes',
-            name: 'commandes',
-            builder: (context, state) => const CommandesListScreen(),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home/commandes',
+                name: 'commandes',
+                builder: (context, state) => const CommandesListScreen(),
+              ),
+            ],
           ),
-          GoRoute(
-            path: '/home/gains',
-            name: 'gains',
-            builder: (context, state) => const GainsScreen(),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home/gains',
+                name: 'gains',
+                builder: (context, state) => const GainsScreen(),
+              ),
+            ],
           ),
-          GoRoute(
-            path: '/home/profil',
-            name: 'profil',
-            builder: (context, state) => const ProfilScreen(),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home/profil',
+                name: 'profil',
+                builder: (context, state) => const ProfilScreen(),
+              ),
+            ],
           ),
         ],
       ),
@@ -165,18 +182,12 @@ class _AuthNotifier extends ChangeNotifier {
 }
 
 /// Shell principal avec BottomNavigationBar persistante
-class MainShell extends ConsumerStatefulWidget {
-  final Widget child;
-  const MainShell({super.key, required this.child});
+class MainShell extends ConsumerWidget {
+  const MainShell({super.key, required this.navigationShell});
 
-  @override
-  ConsumerState<MainShell> createState() => _MainShellState();
-}
+  final StatefulNavigationShell navigationShell;
 
-class _MainShellState extends ConsumerState<MainShell> {
-  int _currentIndex = 0;
-
-  final List<String> _routes = [
+  static const _routes = [
     '/home/dashboard',
     '/home/commandes',
     '/home/gains',
@@ -184,18 +195,20 @@ class _MainShellState extends ConsumerState<MainShell> {
   ];
 
   @override
-  Widget build(BuildContext context) {
-    // Badge sur l'onglet Commandes si une commande est active
+  Widget build(BuildContext context, WidgetRef ref) {
     final hasActiveCommande = ref.watch(activeCommandeProvider) != null;
 
     return Scaffold(
-      body: widget.child,
+      body: navigationShell,
       bottomNavigationBar: OzelBottomNavBar(
-        currentIndex: _currentIndex,
+        currentIndex: navigationShell.currentIndex,
         hasActiveCommande: hasActiveCommande,
         onTap: (index) {
-          setState(() => _currentIndex = index);
-          context.go(_routes[index]);
+          if (index == navigationShell.currentIndex) {
+            context.go(_routes[index]);
+            return;
+          }
+          navigationShell.goBranch(index);
         },
       ),
     );
