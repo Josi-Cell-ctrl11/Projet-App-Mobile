@@ -114,6 +114,34 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: '/home/commandes',
                 name: 'commandes',
                 builder: (context, state) => const CommandesListScreen(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    name: 'commandeDetail',
+                    builder: (context, state) {
+                      final id = state.pathParameters['id']!;
+                      return CommandeDetailScreen(commandeId: id);
+                    },
+                    routes: [
+                      GoRoute(
+                        path: 'navigation',
+                        name: 'navigationGps',
+                        builder: (context, state) {
+                          final id = state.pathParameters['id']!;
+                          return NavigationScreen(commandeId: id);
+                        },
+                      ),
+                      GoRoute(
+                        path: 'confirmation',
+                        name: 'confirmationOtp',
+                        builder: (context, state) {
+                          final id = state.pathParameters['id']!;
+                          return OtpConfirmationScreen(commandeId: id);
+                        },
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),
@@ -140,30 +168,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // ── Routes hors shell (plein écran) ─────────────────────────────────
       GoRoute(
-        path: '/home/commandes/:id',
-        name: 'commandeDetail',
-        builder: (context, state) {
-          final id = state.pathParameters['id']!;
-          return CommandeDetailScreen(commandeId: id);
-        },
-      ),
-      GoRoute(
-        path: '/home/commandes/:id/navigation',
-        name: 'navigationGps',
-        builder: (context, state) {
-          final id = state.pathParameters['id']!;
-          return NavigationScreen(commandeId: id);
-        },
-      ),
-      GoRoute(
-        path: '/home/commandes/:id/confirmation',
-        name: 'confirmationOtp',
-        builder: (context, state) {
-          final id = state.pathParameters['id']!;
-          return OtpConfirmationScreen(commandeId: id);
-        },
-      ),
-      GoRoute(
         path: '/notifications',
         name: 'notifications',
         builder: (context, state) => const NotificationsScreen(),
@@ -187,13 +191,6 @@ class MainShell extends ConsumerWidget {
 
   final StatefulNavigationShell navigationShell;
 
-  static const _routes = [
-    '/home/dashboard',
-    '/home/commandes',
-    '/home/gains',
-    '/home/profil',
-  ];
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final hasActiveCommande = ref.watch(activeCommandeProvider) != null;
@@ -204,11 +201,10 @@ class MainShell extends ConsumerWidget {
         currentIndex: navigationShell.currentIndex,
         hasActiveCommande: hasActiveCommande,
         onTap: (index) {
-          if (index == navigationShell.currentIndex) {
-            context.go(_routes[index]);
-            return;
-          }
-          navigationShell.goBranch(index);
+          navigationShell.goBranch(
+            index,
+            initialLocation: index == navigationShell.currentIndex,
+          );
         },
       ),
     );
