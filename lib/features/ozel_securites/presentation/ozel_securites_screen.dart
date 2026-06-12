@@ -1,5 +1,5 @@
 import "package:flutter/material.dart";
-import "../../ozel_event/presentation/ozel_event_screen.dart";
+import "../../../shared/widgets/coming_soon_screen.dart";
 
 /// Ecran Ozel Securites — Bientot disponible
 class OzelSecuritesScreen extends StatelessWidget {
@@ -7,7 +7,7 @@ class OzelSecuritesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const _ComingSoonScreen(
+    return const ComingSoonScreen(
       color: Color(0xFF37474F),
       icon: Icons.security_rounded,
       title: "Ozel Securites",

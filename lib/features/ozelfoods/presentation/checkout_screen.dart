@@ -3,7 +3,6 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:go_router/go_router.dart";
 
 import "../../../core/constants/app_constants.dart";
-import "../../../core/payment/fedapay_service.dart";
 import "../../../core/payment/fedapay_webview_screen.dart";
 import "../../../core/theme/app_colors.dart";
 import "../../../core/utils/food_business_rules.dart";
@@ -28,6 +27,17 @@ enum DeliveryZone {
   const DeliveryZone({required this.label, required this.feeFcfa});
 }
 
+/// Mode de paiement du repas (FedaPay gère MTN/Moov/Visa dans la WebView).
+enum FoodPaymentMode {
+  full(label: "Payer tout maintenant", fraction: 1.0),
+  deposit50(label: "Payer l'acompte (50%)", fraction: 0.5);
+
+  const FoodPaymentMode({required this.label, required this.fraction});
+
+  final String label;
+  final double fraction;
+}
+
 /// Checkout OzelFoods — logique rapport client :
 /// - Paiement du repas obligatoire a l'avance (MoMo)
 /// - Frais de livraison affiches separement, regles a la remise
@@ -44,12 +54,18 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     text: "Haie Vive, Cotonou — pres de St Michel",
   );
   DeliveryZone _zone = DeliveryZone.cotonouCentre;
-  PaymentMethod _method = PaymentMethod.mtnMomo;
+  FoodPaymentMode _paymentMode = FoodPaymentMode.full;
   bool _simulateLate = false;
   bool _simulateRestaurantReject = false;
   bool _loading = false;
 
   double get deliveryFee => _zone.feeFcfa;
+
+  double _amountToPayNow(double subtotal) =>
+      subtotal * _paymentMode.fraction;
+
+  double _remainingMealBalance(double subtotal) =>
+      _paymentMode == FoodPaymentMode.deposit50 ? subtotal * 0.5 : 0;
 
   @override
   void dispose() {
@@ -67,6 +83,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     }
 
     final subtotal = ref.read(cartProvider.notifier).subtotal;
+    final amountNow = _amountToPayNow(subtotal);
+    final soldeRepas = _remainingMealBalance(subtotal);
 
     if (!FoodBusinessRules.meetsMinimumOrder(
       subtotal,
@@ -111,10 +129,19 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             const Divider(height: 20),
             _PaymentRow(
               label: "A payer maintenant",
-              amount: subtotal,
+              amount: amountNow,
               color: AppColors.primary,
               isBold: true,
             ),
+            if (soldeRepas > 0) ...[
+              const SizedBox(height: 8),
+              _PaymentRow(
+                label: "Solde repas a la remise",
+                amount: soldeRepas,
+                color: AppColors.textSecondary,
+                note: "Regle au livreur avec les frais de livraison",
+              ),
+            ],
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(10),
@@ -156,7 +183,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
             ),
-            child: Text("Payer ${Formatters.fcfa(subtotal)}"),
+            child: Text("Payer ${Formatters.fcfa(amountNow)}"),
           ),
         ],
       ),
@@ -172,7 +199,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
     final paid = await lancerPaiementFedaPay(
       context: context,
-      montant: subtotal,
+      montant: amountNow,
       description: "OzelFoods — $restaurantName",
       customerName: user?.displayName ?? "Client Ozel",
       customerPhone: user?.phone ?? "",
@@ -189,9 +216,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           lateMinutes: _simulateLate ? 20 : 0,
         );
 
-    // Points Ozel : 1 FCFA = 1 point sur le montant repas paye
+    // Points Ozel : 1 FCFA = 1 point sur le montant paye via FedaPay
     if (user != null) {
-      final gained = AppConstants.fcfaToPoints(subtotal);
+      final gained = AppConstants.fcfaToPoints(amountNow);
       await ref.read(authSessionProvider.notifier).updateUser(
             user.copyWith(ozelPoints: user.ozelPoints + gained),
           );
@@ -206,6 +233,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   Widget build(BuildContext context) {
     final cart = ref.watch(cartProvider);
     final subtotal = ref.read(cartProvider.notifier).subtotal;
+    final amountNow = _amountToPayNow(subtotal);
+    final soldeRepas = _remainingMealBalance(subtotal);
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -414,7 +443,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                             ),
                           ),
                           Text(
-                            Formatters.fcfa(subtotal),
+                            Formatters.fcfa(amountNow),
                             style: const TextStyle(
                               fontWeight: FontWeight.w900,
                               fontSize: 20,
@@ -423,6 +452,28 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                           ),
                         ],
                       ),
+                      if (soldeRepas > 0) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              "Solde repas a la remise",
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 13,
+                              ),
+                            ),
+                            Text(
+                              Formatters.fcfa(soldeRepas),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -462,10 +513,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
                 const SizedBox(height: 20),
 
-                // ── Moyen de paiement ─────────────────────────────────────────
+                // ── Mode de paiement ──────────────────────────────────────────
                 _SectionTitle(
-                    icon: Icons.payment_rounded,
-                    label: "Moyen de paiement"),
+                    icon: Icons.payments_rounded,
+                    label: "Mode de paiement"),
                 const SizedBox(height: 10),
                 Container(
                   decoration: BoxDecoration(
@@ -473,10 +524,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(
-                    children: PaymentMethod.values.map((m) {
-                      final selected = m == _method;
+                    children: FoodPaymentMode.values.map((mode) {
+                      final selected = mode == _paymentMode;
                       return GestureDetector(
-                        onTap: () => setState(() => _method = m),
+                        onTap: () => setState(() => _paymentMode = mode),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 12),
@@ -491,32 +542,52 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                                         .withValues(alpha: 0.3))
                                 : null,
                           ),
-                          child: Row(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(
-                                Icons.phone_android_rounded,
-                                color: selected
-                                    ? AppColors.primary
-                                    : AppColors.textSecondary,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  m.labelFr,
-                                  style: TextStyle(
-                                    fontWeight: selected
-                                        ? FontWeight.w700
-                                        : FontWeight.w400,
+                              Row(
+                                children: [
+                                  Icon(
+                                    mode == FoodPaymentMode.full
+                                        ? Icons.payments_rounded
+                                        : Icons.savings_outlined,
                                     color: selected
                                         ? AppColors.primary
-                                        : AppColors.black,
+                                        : AppColors.textSecondary,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      mode.label,
+                                      style: TextStyle(
+                                        fontWeight: selected
+                                            ? FontWeight.w700
+                                            : FontWeight.w400,
+                                        color: selected
+                                            ? AppColors.primary
+                                            : AppColors.black,
+                                      ),
+                                    ),
+                                  ),
+                                  if (selected)
+                                    const Icon(Icons.check_circle_rounded,
+                                        color: AppColors.primary, size: 20),
+                                ],
+                              ),
+                              if (mode == FoodPaymentMode.deposit50 &&
+                                  selected) ...[
+                                const SizedBox(height: 8),
+                                Text(
+                                  "Le solde de ${Formatters.fcfa(soldeRepas)} sera regle "
+                                  "au livreur a la remise.",
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.warning,
+                                    height: 1.4,
                                   ),
                                 ),
-                              ),
-                              if (selected)
-                                const Icon(Icons.check_circle_rounded,
-                                    color: AppColors.primary, size: 20),
+                              ],
                             ],
                           ),
                         ),
@@ -585,7 +656,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 OzelPrimaryButton(
                   label: _loading
                       ? "Paiement en cours..."
-                      : "Payer ${Formatters.fcfa(subtotal)} (repas)",
+                      : "Payer ${Formatters.fcfa(amountNow)} (repas)",
                   enabled: !_loading,
                   onPressed: _pay,
                 ),
@@ -594,7 +665,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
                 Center(
                   child: Text(
-                    "Paiement securise via FedaPay (simulation)",
+                    "Paiement securise via FedaPay — MTN, Moov ou Visa sur la page de paiement",
                     style: TextStyle(
                       fontSize: 11,
                       color: AppColors.textSecondary,

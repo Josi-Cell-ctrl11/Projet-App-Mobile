@@ -3,7 +3,6 @@ import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:go_router/go_router.dart";
 import "package:uuid/uuid.dart";
 
-import "../../../core/payment/fedapay_service.dart";
 import "../../../core/payment/fedapay_webview_screen.dart";
 import "../../../core/theme/app_colors.dart";
 import "../../../core/utils/formatters.dart";
@@ -34,7 +33,6 @@ class ColisConfirmScreen extends ConsumerStatefulWidget {
 }
 
 class _ColisConfirmScreenState extends ConsumerState<ColisConfirmScreen> {
-  PaymentMethod _method = PaymentMethod.moovMoney;
   bool _loading = false;
 
   Future<void> _pay() async {

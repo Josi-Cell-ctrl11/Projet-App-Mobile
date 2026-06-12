@@ -1,5 +1,5 @@
 import "package:flutter/material.dart";
-import "../../ozel_event/presentation/ozel_event_screen.dart";
+import "../../../shared/widgets/coming_soon_screen.dart";
 
 /// Ecran OzelTic — Bientot disponible
 class OzelTicScreen extends StatelessWidget {
@@ -7,7 +7,7 @@ class OzelTicScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const _ComingSoonScreen(
+    return const ComingSoonScreen(
       color: Color(0xFF1565C0),
       icon: Icons.devices_rounded,
       title: "OzelTic",

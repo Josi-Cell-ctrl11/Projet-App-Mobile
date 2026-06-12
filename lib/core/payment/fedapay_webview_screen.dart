@@ -25,23 +25,39 @@ class FedaPayWebViewScreen extends StatefulWidget {
 }
 
 class _FedaPayWebViewScreenState extends State<FedaPayWebViewScreen> {
-  late final WebViewController _ctrl;
+  WebViewController? _ctrl;
   bool _loading = true;
+  String? _loadError;
 
   @override
   void initState() {
     super.initState();
+    _initWebView();
+  }
+
+  void _initWebView() {
+    final uri = Uri.tryParse(widget.checkoutUrl);
+    if (widget.checkoutUrl.isEmpty || uri == null || !uri.hasScheme) {
+      setState(() {
+        _loadError = "URL de paiement invalide.";
+        _loading = false;
+      });
+      return;
+    }
+
     _ctrl = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
         NavigationDelegate(
-          onPageStarted: (_) => setState(() => _loading = true),
-          onPageFinished: (_) => setState(() => _loading = false),
+          onPageStarted: (_) {
+            if (mounted) setState(() => _loading = true);
+          },
+          onPageFinished: (_) {
+            if (mounted) setState(() => _loading = false);
+          },
           onNavigationRequest: (request) {
             final url = request.url;
 
-            // FedaPay sandbox redirige vers checkout-sandbox.fedapay.com/done
-            // avec ?status=approved|declined|canceled en paramètre
             if (url.contains("fedapay.com/done") ||
                 url.contains("fedapay.com/pay") && url.contains("status=")) {
               final uri = Uri.parse(url);
@@ -50,7 +66,6 @@ class _FedaPayWebViewScreenState extends State<FedaPayWebViewScreen> {
               return NavigationDecision.prevent;
             }
 
-            // Intercepter la callback_url personnalisée
             if (url.contains("ozelservices-payment.web.app/callback")) {
               final uri = Uri.parse(url);
               final status = uri.queryParameters["status"];
@@ -58,9 +73,9 @@ class _FedaPayWebViewScreenState extends State<FedaPayWebViewScreen> {
               return NavigationDecision.prevent;
             }
 
-            // Intercepter les URLs de retour FedaPay (approved/declined)
             if (url.contains("transaction_id") &&
-                (url.contains("approved") || url.contains("declined") ||
+                (url.contains("approved") ||
+                    url.contains("declined") ||
                     url.contains("canceled"))) {
               final approved = url.contains("approved");
               Navigator.pop(context, approved);
@@ -70,12 +85,34 @@ class _FedaPayWebViewScreenState extends State<FedaPayWebViewScreen> {
             return NavigationDecision.navigate;
           },
           onWebResourceError: (error) {
-            // Ignorer les erreurs sur la callback URL (domaine inexistant)
-            // FedaPay a déjà envoyé le statut dans l'URL
+            if (!mounted) return;
+            if (error.url?.contains("ozelservices-payment.web.app/callback") ==
+                true) {
+              return;
+            }
+            setState(() {
+              _loadError = error.description.isNotEmpty
+                  ? error.description
+                  : "Impossible de charger la page de paiement.";
+              _loading = false;
+            });
           },
         ),
       )
-      ..loadRequest(Uri.parse(widget.checkoutUrl));
+      ..loadRequest(uri);
+  }
+
+  void _retry() {
+    final uri = Uri.tryParse(widget.checkoutUrl);
+    if (_ctrl == null || uri == null || !uri.hasScheme) {
+      _initWebView();
+      return;
+    }
+    setState(() {
+      _loadError = null;
+      _loading = true;
+    });
+    _ctrl!.loadRequest(uri);
   }
 
   @override
@@ -111,17 +148,16 @@ class _FedaPayWebViewScreenState extends State<FedaPayWebViewScreen> {
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 12),
-            padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Row(
+            child: const Row(
               children: [
-                const Icon(Icons.lock_rounded, size: 12),
-                const SizedBox(width: 4),
-                const Text(
+                Icon(Icons.lock_rounded, size: 12),
+                SizedBox(width: 4),
+                Text(
                   "FedaPay",
                   style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
                 ),
@@ -130,35 +166,111 @@ class _FedaPayWebViewScreenState extends State<FedaPayWebViewScreen> {
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          WebViewWidget(controller: _ctrl),
-          if (_loading)
-            const Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(color: AppColors.primary),
-                  SizedBox(height: 16),
-                  Text(
-                    "Chargement du paiement...",
-                    style: TextStyle(color: AppColors.textSecondary),
+      body: _loadError != null
+          ? _ErrorView(
+              message: _loadError!,
+              onRetry: _retry,
+              onCancel: () => Navigator.pop(context, false),
+            )
+          : Stack(
+              children: [
+                if (_ctrl != null) WebViewWidget(controller: _ctrl!),
+                if (_loading)
+                  const Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(color: AppColors.primary),
+                        SizedBox(height: 16),
+                        Text(
+                          "Chargement du paiement...",
+                          style: TextStyle(color: AppColors.textSecondary),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
+                if (!_loading && _ctrl != null)
+                  Positioned(
+                    bottom: 16,
+                    left: 16,
+                    right: 16,
+                    child: _ConfirmationManuelle(
+                      transactionId: widget.transactionId,
+                      onConfirm: (approved) => Navigator.pop(context, approved),
+                    ),
+                  ),
+              ],
+            ),
+    );
+  }
+}
+
+class _ErrorView extends StatelessWidget {
+  const _ErrorView({
+    required this.message,
+    required this.onRetry,
+    required this.onCancel,
+  });
+
+  final String message;
+  final VoidCallback onRetry;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.wifi_off_rounded,
+              size: 56,
+              color: AppColors.textSecondary,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              "Impossible de charger la page de paiement",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: AppColors.black,
               ),
             ),
-          // Bouton de confirmation manuelle (fallback si pas de redirection auto)
-          if (!_loading)
-            Positioned(
-              bottom: 16,
-              left: 16,
-              right: 16,
-              child: _ConfirmationManuelle(
-                transactionId: widget.transactionId,
-                onConfirm: (approved) => Navigator.pop(context, approved),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+                height: 1.4,
               ),
             ),
-        ],
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text("Réessayer"),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: onCancel,
+                child: const Text("Annuler"),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -175,7 +287,6 @@ Future<bool> lancerPaiementFedaPay({
 }) async {
   final service = FedaPayService();
 
-  // Afficher loading
   showDialog(
     context: context,
     barrierDismissible: false,
@@ -193,7 +304,7 @@ Future<bool> lancerPaiementFedaPay({
   );
 
   if (!context.mounted) return false;
-  Navigator.pop(context); // Fermer loading
+  Navigator.pop(context);
 
   if (!result.success || result.checkoutUrl == null) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -202,7 +313,6 @@ Future<bool> lancerPaiementFedaPay({
     return false;
   }
 
-  // Ouvrir la WebView FedaPay
   final paid = await Navigator.push<bool>(
     context,
     MaterialPageRoute(
@@ -218,19 +328,14 @@ Future<bool> lancerPaiementFedaPay({
   return paid ?? false;
 }
 
-// Import nécessaire déjà en haut du fichier
-
-// ── Widget de confirmation manuelle ──────────────────────────────────────────
-// Affiché en overlay quand FedaPay ne redirige pas automatiquement (sandbox)
-
 class _ConfirmationManuelle extends StatefulWidget {
-  final String transactionId;
-  final void Function(bool approved) onConfirm;
-
   const _ConfirmationManuelle({
     required this.transactionId,
     required this.onConfirm,
   });
+
+  final String transactionId;
+  final void Function(bool approved) onConfirm;
 
   @override
   State<_ConfirmationManuelle> createState() => _ConfirmationManuelleState();
@@ -243,7 +348,6 @@ class _ConfirmationManuelleState extends State<_ConfirmationManuelle> {
   @override
   void initState() {
     super.initState();
-    // Afficher le bouton après 5 secondes (laisse le temps à FedaPay de rediriger)
     Future.delayed(const Duration(seconds: 5), () {
       if (mounted) setState(() => _visible = true);
     });
@@ -281,7 +385,7 @@ class _ConfirmationManuelleState extends State<_ConfirmationManuelle> {
           const SizedBox(width: 8),
           const Expanded(
             child: Text(
-              'Paiement effectué ? Cliquez pour confirmer',
+              "Paiement effectué ? Cliquez pour confirmer",
               style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
             ),
           ),
@@ -295,7 +399,8 @@ class _ConfirmationManuelleState extends State<_ConfirmationManuelle> {
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: _checking
                   ? const SizedBox(
@@ -306,7 +411,7 @@ class _ConfirmationManuelleState extends State<_ConfirmationManuelle> {
                         strokeWidth: 2,
                       ),
                     )
-                  : const Text('Vérifier', style: TextStyle(fontSize: 12)),
+                  : const Text("Vérifier", style: TextStyle(fontSize: 12)),
             ),
           ),
         ],
