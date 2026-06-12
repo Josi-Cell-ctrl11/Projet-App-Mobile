@@ -80,7 +80,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     if (!mounted) return;
     final authState = ref.read(authProvider);
     if (authState.isAuthenticated) {
-      context.go('/home/dashboard');
+      context.go('/home');
     } else {
       setState(() {
         _errorMessage = AppStrings.codeIncorrect;

@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 
-/// Index des onglets de la navigation principale
-enum NavTab { accueil, commandes, gains, profil }
-
-/// Barre de navigation inférieure avec 4 onglets et badge sur Commandes
+/// Barre de navigation inférieure avec 4 onglets et badge sur Commandes.
 class OzelBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -34,79 +31,118 @@ class OzelBottomNavBar extends StatelessWidget {
           ),
         ],
       ),
-      child: BottomNavigationBar(
-        currentIndex: currentIndex,
-        onTap: onTap,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: AppColors.kWhite,
-        selectedItemColor: AppColors.kPrimaryOrange,
-        unselectedItemColor: AppColors.kGrey,
-        selectedLabelStyle: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 64,
+          child: Row(
+            children: [
+              _NavItem(
+                index: 0,
+                currentIndex: currentIndex,
+                icon: Icons.home_outlined,
+                activeIcon: Icons.home,
+                label: AppStrings.tableauDeBord,
+                onTap: onTap,
+              ),
+              _NavItem(
+                index: 1,
+                currentIndex: currentIndex,
+                icon: Icons.inventory_2_outlined,
+                activeIcon: Icons.inventory_2,
+                label: AppStrings.commandes,
+                onTap: onTap,
+                showBadge: hasActiveCommande,
+              ),
+              _NavItem(
+                index: 2,
+                currentIndex: currentIndex,
+                icon: Icons.account_balance_wallet_outlined,
+                activeIcon: Icons.account_balance_wallet,
+                label: AppStrings.gains,
+                onTap: onTap,
+              ),
+              _NavItem(
+                index: 3,
+                currentIndex: currentIndex,
+                icon: Icons.person_outline,
+                activeIcon: Icons.person,
+                label: AppStrings.profil,
+                onTap: onTap,
+              ),
+            ],
+          ),
         ),
-        unselectedLabelStyle: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.normal,
-        ),
-        elevation: 0,
-        items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: AppStrings.tableauDeBord,
-          ),
-          BottomNavigationBarItem(
-            icon: _CommandesIcon(hasBadge: hasActiveCommande, isActive: false),
-            activeIcon:
-                _CommandesIcon(hasBadge: hasActiveCommande, isActive: true),
-            label: AppStrings.commandes,
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            activeIcon: Icon(Icons.account_balance_wallet),
-            label: AppStrings.gains,
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: AppStrings.profil,
-          ),
-        ],
       ),
     );
   }
 }
 
-/// Icône Commandes avec badge de notification optionnel
-class _CommandesIcon extends StatelessWidget {
-  final bool hasBadge;
-  final bool isActive;
+class _NavItem extends StatelessWidget {
+  const _NavItem({
+    required this.index,
+    required this.currentIndex,
+    required this.icon,
+    required this.activeIcon,
+    required this.label,
+    required this.onTap,
+    this.showBadge = false,
+  });
 
-  const _CommandesIcon({required this.hasBadge, required this.isActive});
+  final int index;
+  final int currentIndex;
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+  final ValueChanged<int> onTap;
+  final bool showBadge;
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Icon(
-          isActive ? Icons.inventory_2 : Icons.inventory_2_outlined,
-        ),
-        if (hasBadge)
-          Positioned(
-            right: -4,
-            top: -4,
-            child: Container(
-              width: 10,
-              height: 10,
-              decoration: const BoxDecoration(
-                color: AppColors.kRed,
-                shape: BoxShape.circle,
+    final isActive = index == currentIndex;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => onTap(index),
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(
+                  isActive ? activeIcon : icon,
+                  size: 24,
+                  color: isActive ? AppColors.kPrimaryOrange : AppColors.kGrey,
+                ),
+                if (showBadge)
+                  Positioned(
+                    right: -4,
+                    top: -4,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: const BoxDecoration(
+                        color: AppColors.kRed,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                color: isActive ? AppColors.kPrimaryOrange : AppColors.kGrey,
               ),
             ),
-          ),
-      ],
+          ],
+        ),
+      ),
     );
   }
 }

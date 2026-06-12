@@ -318,7 +318,7 @@ class NotificationService {
         '[Notifications] Pas de commandeId dans la notification — navigation vers liste',
         name: 'NotificationService',
       );
-      context.go('/home/commandes');
+      context.go('/home?tab=1');
     }
   }
 

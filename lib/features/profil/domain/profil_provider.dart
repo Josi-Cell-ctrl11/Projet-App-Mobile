@@ -2,12 +2,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/models/livreur.dart';
 import '../data/profil_repository.dart';
-import '../data/firestore_profil_repository.dart';
 
 /// Provider du repository du profil
-/// Utilise Firestore en production.
+/// Mock pour le MVP — remplacer par FirestoreProfilRepository() en prod.
 final profilRepositoryProvider = Provider<IProfilRepository>((ref) {
-  return FirestoreProfilRepository();
+  return MockProfilRepository();
 });
 
 /// Provider principal du profil livreur

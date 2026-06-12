@@ -9,7 +9,7 @@ import '../data/firestore_commandes_repository.dart';
 /// Provider du repository des commandes
 /// Utilise Firestore en production.
 final commandesRepositoryProvider = Provider<ICommandesRepository>((ref) {
-  return FirestoreCommandesRepository();
+  return MockCommandesRepository(); // Mock pour tests
 });
 
 /// Provider de la liste des commandes disponibles

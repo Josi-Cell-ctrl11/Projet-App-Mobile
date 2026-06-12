@@ -2,12 +2,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/models/gain.dart';
 import '../data/gains_repository.dart';
-import '../data/firestore_gains_repository.dart';
 
 /// Provider du repository des gains
-/// Utilise Firestore en production.
+/// Mock pour le MVP — remplacer par FirestoreGainsRepository() en prod.
 final gainsRepositoryProvider = Provider<IGainsRepository>((ref) {
-  return FirestoreGainsRepository();
+  return MockGainsRepository();
 });
 
 /// Provider principal des gains

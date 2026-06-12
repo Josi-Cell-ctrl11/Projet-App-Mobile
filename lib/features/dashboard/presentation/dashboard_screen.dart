@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../features/shell/main_home_screen.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/formatters.dart';
@@ -96,7 +97,7 @@ class DashboardScreen extends ConsumerWidget {
               if (estEnLigne && commandeActive == null) ...[
                 OzelButton(
                   label: AppStrings.voirCommandesDisponibles,
-                  onPressed: () => context.go('/home/commandes'),
+                  onPressed: () => allerOnglet(ref, 1),
                   icon: Icons.delivery_dining,
                 ),
                 const SizedBox(height: 16),

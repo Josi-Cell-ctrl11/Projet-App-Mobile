@@ -128,7 +128,7 @@ class _OtpConfirmationScreenState
               label: 'Retour à l\'accueil',
               onPressed: () {
                 Navigator.pop(ctx);
-                context.go('/home/dashboard');
+                context.go('/home');
               },
             ),
           ],

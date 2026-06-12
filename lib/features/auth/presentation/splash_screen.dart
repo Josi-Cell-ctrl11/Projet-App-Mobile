@@ -47,7 +47,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _redirected = true;
     final authState = ref.read(authProvider);
     if (authState.isAuthenticated) {
-      context.go('/home/dashboard');
+      context.go('/home');
     } else {
       context.go('/login');
     }

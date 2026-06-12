@@ -41,10 +41,8 @@ class AuthState {
 }
 
 /// Provider du repository d'authentification
-/// Utilise Firebase Phone Auth + Firestore en production.
-/// Remplacer par MockAuthRepository() pour les tests.
 final authRepositoryProvider = Provider<IAuthRepository>((ref) {
-  return FirebaseAuthRepository();
+  return MockAuthRepository(); // Mock pour tests — remplacer par FirebaseAuthRepository() pour prod
 });
 
 /// Provider principal de l'authentification
